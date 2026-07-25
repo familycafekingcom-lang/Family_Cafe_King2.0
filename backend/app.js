@@ -1,0 +1,58 @@
+const express = require("express");
+const cors = require("cors");
+const dotenv = require("dotenv");
+const cookieParser = require("cookie-parser");
+
+dotenv.config();
+
+const leadroutes = require("./routes/leadroutes");
+const bookingroutes = require("./routes/bookingroutes");
+const contactroutes = require("./routes/contactroutes");
+const adminroutes = require("./routes/adminroutes");
+const launchroutes = require("./routes/launchroutes");
+
+const app = express();
+
+// Middlewares - Allow CORS from any origin or dev server
+app.use(
+  cors({
+    origin: true,
+    credentials: true,
+  })
+);
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+app.use(cookieParser());
+
+// Health Check
+app.get("/api/health", (req, res) => {
+  res.json({
+    success: true,
+    message: "Family Cafe King MERN Backend Active 🚀",
+    timestamp: new Date().toISOString(),
+  });
+});
+
+app.get("/", (req, res) => {
+  res.json({
+    success: true,
+    message: "Family Cafe King Backend Running 🚀",
+  });
+});
+
+// API Routes
+app.use("/api/leads", leadroutes);
+app.use("/api/bookings", bookingroutes);
+app.use("/api/contacts", contactroutes);
+app.use("/api/admin", adminroutes);
+app.use("/api/launches", launchroutes);
+
+// 404
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    message: "Route Not Found",
+  });
+});
+
+module.exports = app;
