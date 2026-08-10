@@ -2,14 +2,17 @@ const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
 const cookieParser = require("cookie-parser");
+const path = require("path");
 
-dotenv.config();
+dotenv.config({ path: path.join(__dirname, ".env") });
+dotenv.config({ path: path.join(__dirname, "../.env") });
 
 const leadroutes = require("./routes/leadroutes");
 const bookingroutes = require("./routes/bookingroutes");
 const contactroutes = require("./routes/contactroutes");
 const adminroutes = require("./routes/adminroutes");
 const launchroutes = require("./routes/launchroutes");
+const sliderroutes = require("./routes/sliderroutes");
 
 const app = express();
 
@@ -46,6 +49,7 @@ app.use("/api/bookings", bookingroutes);
 app.use("/api/contacts", contactroutes);
 app.use("/api/admin", adminroutes);
 app.use("/api/launches", launchroutes);
+app.use("/api/slides", sliderroutes);
 
 // 404
 app.use((req, res) => {

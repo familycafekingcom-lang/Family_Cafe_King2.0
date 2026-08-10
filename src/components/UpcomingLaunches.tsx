@@ -9,13 +9,24 @@ export function UpcomingLaunches() {
 
   useEffect(() => {
     let cancelled = false;
-    listLaunches()
-      .then((rows) => {
-        if (!cancelled && rows.length > 0) setLaunches(rows);
-      })
-      .catch(() => setLaunches(DEFAULT_UPCOMING));
+    const load = () => {
+      listLaunches()
+        .then((rows) => {
+          if (!cancelled && rows.length > 0) setLaunches(rows);
+        })
+        .catch(() => setLaunches(DEFAULT_UPCOMING));
+    };
+
+    load();
+
+    const handleUpdate = () => load();
+    window.addEventListener("fck_launches_updated", handleUpdate);
+    window.addEventListener("storage", handleUpdate);
+
     return () => {
       cancelled = true;
+      window.removeEventListener("fck_launches_updated", handleUpdate);
+      window.removeEventListener("storage", handleUpdate);
     };
   }, []);
 

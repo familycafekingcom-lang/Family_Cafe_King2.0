@@ -2,14 +2,20 @@ import {
   apiAdminLogin,
   apiCreateLaunch,
   apiCreateLead,
+  apiCreateSlide,
   apiDeleteLaunch,
   apiDeleteLead,
+  apiDeleteSlide,
   apiGetLaunches,
   apiGetLeads,
+  apiGetSlides,
+  apiUpdateLaunch,
   apiUpdateLead,
+  apiUpdateSlide,
   checkBackendHealth,
   type MernLaunch,
   type MernLead,
+  type MernSlide,
 } from "./api";
 
 export type LeadStatus = "New" | "Contacted" | "Interested" | "Converted" | "Lost";
@@ -45,6 +51,26 @@ export interface LaunchRecord extends LaunchInput {
   created_at: string;
 }
 
+export interface SlideInput {
+  title: string;
+  subtitle: string;
+  brand_name: string;
+  badge_text: string;
+  image_url: string;
+  price_display: string;
+  space_req: string;
+  cta_text: string;
+  cta_link: string;
+  accent_color: string;
+  is_active: boolean;
+  order: number;
+}
+
+export interface SlideRecord extends SlideInput {
+  id: string;
+  created_at: string;
+}
+
 export interface SaveResult {
   record: LeadRecord;
   storage: "mern" | "supabase" | "local";
@@ -58,6 +84,90 @@ export const DATABASE_MODE: "mern" | "supabase" | "local" = "mern";
 
 const LEADS_KEY = "fck_leads_v1";
 const LAUNCHES_KEY = "fck_upcoming_launches_v1";
+const SLIDES_KEY = "fck_hero_slides_v1";
+
+export const DEFAULT_SLIDES: SlideRecord[] = [
+  {
+    id: "default-slide-1",
+    created_at: "2026-08-01T00:00:00.000Z",
+    title: "Own India's most loved café franchise",
+    subtitle: "Join 350+ successful entrepreneurs across 40+ Indian cities running proven, low-investment food franchises.",
+    brand_name: "Family Cafe King",
+    badge_text: "350+ Franchises All Over India",
+    image_url: "/images/family-cafe-king-food.png",
+    price_display: "₹5 - 15 Lakhs",
+    space_req: "150 - 500 sq.ft",
+    cta_text: "Apply for Franchise",
+    cta_link: "#lead",
+    accent_color: "#8C1F28",
+    is_active: true,
+    order: 0,
+  },
+  {
+    id: "default-slide-2",
+    created_at: "2026-08-02T00:00:00.000Z",
+    title: "Revolutionize Authentic Chai Culture",
+    subtitle: "High margin kulhad chai, snacks & beverages franchise built for high footfall locations.",
+    brand_name: "Chai Cafe King",
+    badge_text: "Fastest Growing Chai Brand",
+    image_url: "/images/chai-cafe-king-food.png",
+    price_display: "₹3 - 10 Lakhs",
+    space_req: "100 - 300 sq.ft",
+    cta_text: "Get Chai Franchise",
+    cta_link: "#lead",
+    accent_color: "#E9A23B",
+    is_active: true,
+    order: 1,
+  },
+  {
+    id: "default-slide-3",
+    created_at: "2026-08-03T00:00:00.000Z",
+    title: "Modern Premium Paan Boutique Franchise",
+    subtitle: "Tobacco-free family-friendly paan boutique with 100+ fusion delicacies and high repeat customer rate.",
+    brand_name: "Paan King",
+    badge_text: "100% Family Friendly Concept",
+    image_url: "/images/paan-king-food.png",
+    price_display: "₹2 - 8 Lakhs",
+    space_req: "80 - 200 sq.ft",
+    cta_text: "Partner With Paan King",
+    cta_link: "#lead",
+    accent_color: "#1F7A3A",
+    is_active: true,
+    order: 2,
+  },
+  {
+    id: "default-slide-4",
+    created_at: "2026-08-04T00:00:00.000Z",
+    title: "Refreshing Shake & Soda Lounge Franchise",
+    subtitle: "Thick milkshakes, sparkling mocktails, sodas and coolers designed for every season.",
+    brand_name: "Shake & Soda King",
+    badge_text: "Cool Sips & Fresh Flavours",
+    image_url: "/images/shake-soda-king-food.png",
+    price_display: "₹1 - 5 Lakhs",
+    space_req: "100 - 150 sq.ft",
+    cta_text: "Explore Shake & Soda",
+    cta_link: "#lead",
+    accent_color: "#0284C7",
+    is_active: true,
+    order: 3,
+  },
+  {
+    id: "default-slide-5",
+    created_at: "2026-08-05T00:00:00.000Z",
+    title: "Pure, Rich & Authentic Lassi Outlets",
+    subtitle: "Authentic Punjabi malai lassi, rabri lassi and thick yogurt delicacies served in traditional kulhad.",
+    brand_name: "Lassi King",
+    badge_text: "Authentic Punjabi Kulhad Lassi",
+    image_url: "/images/lassi-king-food.png",
+    price_display: "₹1 - 5 Lakhs",
+    space_req: "80 - 100 sq.ft",
+    cta_text: "Start Lassi Franchise",
+    cta_link: "#lead",
+    accent_color: "#D97706",
+    is_active: true,
+    order: 4,
+  },
+];
 
 export const DEFAULT_UPCOMING: LaunchRecord[] = [
   {
@@ -143,6 +253,39 @@ const normalizeLaunch = (value: unknown): LaunchRecord => {
     tag: String(item.tag || "Coming Soon"),
     accent: String(item.accent || "#E9A23B"),
   };
+};
+
+const normalizeSlide = (value: unknown): SlideRecord => {
+  const item = (value || {}) as Partial<SlideRecord & MernSlide>;
+  const fallback = DEFAULT_SLIDES[0];
+  return {
+    id: String(item.id || item._id || makeId("slide")),
+    created_at: String(item.created_at || item.createdAt || new Date().toISOString()),
+    title: String(item.title || fallback.title),
+    subtitle: String(item.subtitle || fallback.subtitle),
+    brand_name: String(item.brand_name || fallback.brand_name),
+    badge_text: String(item.badge_text || fallback.badge_text),
+    image_url: String(item.image_url || fallback.image_url),
+    price_display: String(item.price_display || fallback.price_display),
+    space_req: String(item.space_req || fallback.space_req),
+    cta_text: String(item.cta_text || fallback.cta_text),
+    cta_link: String(item.cta_link || fallback.cta_link),
+    accent_color: String(item.accent_color || fallback.accent_color),
+    is_active: item.is_active !== undefined ? Boolean(item.is_active) : true,
+    order: Number(item.order || 0),
+  };
+};
+
+export const notifyLaunchesChanged = () => {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("fck_launches_updated"));
+  }
+};
+
+export const notifySlidesChanged = () => {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("fck_slides_updated"));
+  }
 };
 
 export async function saveLead(input: LeadInput): Promise<SaveResult> {
@@ -262,7 +405,9 @@ export async function saveLaunch(input: LaunchInput, accessToken?: string): Prom
     const isMernAlive = await checkBackendHealth();
     if (isMernAlive) {
       const created = await apiCreateLaunch(input, accessToken);
-      return normalizeLaunch(created);
+      const normalized = normalizeLaunch(created);
+      notifyLaunchesChanged();
+      return normalized;
     }
   } catch (err) {
     console.warn("MERN Create Launch failed, saving to local storage", err);
@@ -271,7 +416,34 @@ export async function saveLaunch(input: LaunchInput, accessToken?: string): Prom
   const record = normalizeLaunch({ ...input, id: makeId("launch"), created_at: new Date().toISOString() });
   const launches = readJson<LaunchRecord[] | null>(LAUNCHES_KEY, null) || DEFAULT_UPCOMING;
   writeJson(LAUNCHES_KEY, [...launches.map(normalizeLaunch), record]);
+  notifyLaunchesChanged();
   return record;
+}
+
+export async function updateLaunch(
+  id: string,
+  input: Partial<LaunchInput>,
+  accessToken?: string
+): Promise<LaunchRecord> {
+  try {
+    const isMernAlive = await checkBackendHealth();
+    if (isMernAlive) {
+      const updated = await apiUpdateLaunch(id, input, accessToken);
+      const normalized = normalizeLaunch(updated);
+      notifyLaunchesChanged();
+      return normalized;
+    }
+  } catch (err) {
+    console.warn("MERN Update Launch failed, updating local storage", err);
+  }
+
+  const launches = (readJson<LaunchRecord[] | null>(LAUNCHES_KEY, null) || DEFAULT_UPCOMING).map(normalizeLaunch);
+  const index = launches.findIndex((item) => item.id === id);
+  if (index < 0) throw new Error("Launch item not found");
+  launches[index] = { ...launches[index], ...input };
+  writeJson(LAUNCHES_KEY, launches);
+  notifyLaunchesChanged();
+  return launches[index];
 }
 
 export async function deleteLaunch(id: string, accessToken?: string): Promise<void> {
@@ -279,6 +451,7 @@ export async function deleteLaunch(id: string, accessToken?: string): Promise<vo
     const isMernAlive = await checkBackendHealth();
     if (isMernAlive) {
       await apiDeleteLaunch(id, accessToken);
+      notifyLaunchesChanged();
       return;
     }
   } catch (err) {
@@ -287,6 +460,89 @@ export async function deleteLaunch(id: string, accessToken?: string): Promise<vo
 
   const current = readJson<LaunchRecord[] | null>(LAUNCHES_KEY, null) || DEFAULT_UPCOMING;
   writeJson(LAUNCHES_KEY, current.filter((launch) => launch.id !== id));
+  notifyLaunchesChanged();
+}
+
+// ================= HERO SLIDES CRUD =================
+export async function listSlides(_accessToken?: string): Promise<SlideRecord[]> {
+  try {
+    const isMernAlive = await checkBackendHealth();
+    if (isMernAlive) {
+      const mernSlides = await apiGetSlides();
+      if (mernSlides && mernSlides.length > 0) {
+        return mernSlides.map(normalizeSlide).sort((a, b) => a.order - b.order);
+      }
+    }
+  } catch (err) {
+    console.warn("MERN List Slides failed, fallback to local defaults", err);
+  }
+
+  const saved = readJson<SlideRecord[] | null>(SLIDES_KEY, null);
+  const rows = (saved && saved.length >= 5 ? saved : DEFAULT_SLIDES).map(normalizeSlide);
+  return rows.sort((a, b) => a.order - b.order);
+}
+
+export async function saveSlide(input: SlideInput, accessToken?: string): Promise<SlideRecord> {
+  try {
+    const isMernAlive = await checkBackendHealth();
+    if (isMernAlive) {
+      const created = await apiCreateSlide(input, accessToken);
+      const normalized = normalizeSlide(created);
+      notifySlidesChanged();
+      return normalized;
+    }
+  } catch (err) {
+    console.warn("MERN Create Slide failed, saving to local storage", err);
+  }
+
+  const record = normalizeSlide({ ...input, id: makeId("slide"), created_at: new Date().toISOString() });
+  const slides = readJson<SlideRecord[] | null>(SLIDES_KEY, null) || DEFAULT_SLIDES;
+  writeJson(SLIDES_KEY, [...slides.map(normalizeSlide), record]);
+  notifySlidesChanged();
+  return record;
+}
+
+export async function updateSlide(
+  id: string,
+  input: Partial<SlideInput>,
+  accessToken?: string
+): Promise<SlideRecord> {
+  try {
+    const isMernAlive = await checkBackendHealth();
+    if (isMernAlive) {
+      const updated = await apiUpdateSlide(id, input, accessToken);
+      const normalized = normalizeSlide(updated);
+      notifySlidesChanged();
+      return normalized;
+    }
+  } catch (err) {
+    console.warn("MERN Update Slide failed, updating local storage", err);
+  }
+
+  const slides = (readJson<SlideRecord[] | null>(SLIDES_KEY, null) || DEFAULT_SLIDES).map(normalizeSlide);
+  const index = slides.findIndex((item) => item.id === id);
+  if (index < 0) throw new Error("Slide item not found");
+  slides[index] = { ...slides[index], ...input };
+  writeJson(SLIDES_KEY, slides);
+  notifySlidesChanged();
+  return slides[index];
+}
+
+export async function deleteSlide(id: string, accessToken?: string): Promise<void> {
+  try {
+    const isMernAlive = await checkBackendHealth();
+    if (isMernAlive) {
+      await apiDeleteSlide(id, accessToken);
+      notifySlidesChanged();
+      return;
+    }
+  } catch (err) {
+    console.warn("MERN Delete Slide failed, removing from local storage", err);
+  }
+
+  const current = readJson<SlideRecord[] | null>(SLIDES_KEY, null) || DEFAULT_SLIDES;
+  writeJson(SLIDES_KEY, current.filter((slide) => slide.id !== id));
+  notifySlidesChanged();
 }
 
 export async function signInAdmin(email: string, password: string): Promise<{ accessToken: string; email: string }> {
@@ -298,16 +554,17 @@ export async function signInAdmin(email: string, password: string): Promise<{ ac
     }
   } catch (err) {
     console.warn("MERN Admin login error, checking fallback admin passcode", err);
-    // If backend returned explicit error message, rethrow
     if (err instanceof Error && !err.message.includes("Failed to fetch")) {
       throw err;
     }
   }
 
-  // Fallback local authentication
-  const expected = import.meta.env.VITE_ADMIN_PASSCODE || "admin123";
-  if (password !== expected) throw new Error("Invalid admin credentials");
-  return { accessToken: "local-demo-token", email: email || "Local Admin" };
+  // Fallback local authentication - accept primary passcode, legacy passcode, or env override
+  const validPasscodes = ["Shivam@1234", "admin123", import.meta.env.VITE_ADMIN_PASSCODE].filter(Boolean);
+  if (!validPasscodes.includes(password)) {
+    throw new Error("Invalid admin credentials");
+  }
+  return { accessToken: "local-demo-token", email: email || "shivamsri.srivastava2@gmail.com" };
 }
 
 export function leadsToCsv(leads: LeadRecord[]): string {

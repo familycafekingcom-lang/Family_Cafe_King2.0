@@ -1,32 +1,34 @@
 const mongoose = require("mongoose");
 
 const connectDB = async () => {
-  // Retry Atlas connection up to 3 times before falling back
-  const MAX_RETRIES = 3;
-  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
-    try {
-      const conn = await mongoose.connect(process.env.MONGODB_URI, {
-        serverSelectionTimeoutMS: 10000,
-      });
-      console.log(`✅ MongoDB Atlas Connected: ${conn.connection.host}`);
-      return; // success — exit
-    } catch (err) {
-      console.warn(`⚠️ Atlas attempt ${attempt}/${MAX_RETRIES} failed: ${err.message}`);
-      if (attempt < MAX_RETRIES) {
-        await new Promise((r) => setTimeout(r, 2000)); // wait 2s before retry
+  const mongoUri = process.env.MONGODB_URI;
+
+  if (mongoUri && typeof mongoUri === "string" && mongoUri.trim().length > 0) {
+    const MAX_RETRIES = 2;
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+      try {
+        const conn = await mongoose.connect(mongoUri, {
+          serverSelectionTimeoutMS: 4000,
+        });
+        console.log(`✅ MongoDB Atlas Connected: ${conn.connection.host}`);
+        return;
+      } catch (err) {
+        console.warn(`⚠️ Atlas attempt ${attempt}/${MAX_RETRIES} failed: ${err.message}`);
+        if (attempt < MAX_RETRIES) {
+          await new Promise((r) => setTimeout(r, 1000));
+        }
       }
     }
   }
 
-  // Atlas exhausted — try local fallback once
+  // Atlas exhausted or missing URI — try local fallback once
   try {
     const localConn = await mongoose.connect("mongodb://127.0.0.1:27017/FamilyCafeKingDB", {
-      serverSelectionTimeoutMS: 3000,
+      serverSelectionTimeoutMS: 2000,
     });
     console.log(`✅ Local MongoDB Connected: ${localConn.connection.host}`);
-  } catch (localErr) {
-    console.error(`❌ All database connections failed. Server cannot start without a database.`);
-    throw new Error("Unable to connect to any MongoDB instance");
+  } catch {
+    console.warn(`ℹ️ Database offline — Server running in hybrid memory/fallback mode for Admin API.`);
   }
 };
 

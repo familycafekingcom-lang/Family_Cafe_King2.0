@@ -54,6 +54,7 @@ export interface BrandData {
   long: string;
   icon: LucideIcon;
   logo: string;
+  foodImage?: string;
   accentGradient: string;
   chipBg: string;
   chipText: string;
@@ -75,6 +76,52 @@ export interface BrandData {
 
 export const BRANDS: BrandData[] = [
   {
+    key: "fck",
+    id: "family-cafe-king",
+    name: "Family Cafe King",
+    tagline: "India's Premier Multi-Brand Food Franchise Network",
+    tag: "Multi-Brand Flagship · Complete Food Outlet",
+    short:
+      "All-in-one flagship café concept bringing together Chai, Paan, Shakes, Lassi, and quick service food under one roof.",
+    long:
+      "Family Cafe King is the flagship master franchise concept. Partnering with Family Cafe King gives you full multi-brand rights to operate high-demand chai, paan, shake, lassi, and quick-serve food modules with massive footfall and high daily margins.",
+    icon: Store,
+    logo: "https://customer-assets-rejwkqb3.emergentagent.net/job_family-cafe-king/artifacts/2q6zxze6_Gemini_Generated_Image_mxlilsmxlilsmxli.png",
+    foodImage: "/images/family-cafe-king-food.png",
+    accentGradient: "from-maroon-700 via-rose-800 to-amber-600",
+    chipBg: "bg-rose-100",
+    chipText: "text-rose-950",
+    emoji: "👑",
+    priceDisplay: "₹5 - 15 Lakhs + GST",
+    investment: {
+      total: "₹5,00,000 - ₹15,00,000",
+      starterKit: "₹4,00,000",
+      brandFee: "₹1,00,000",
+      gstNote: "+ 18% GST Applicable",
+    },
+    space: "150 to 500 sq. ft.",
+    location: "High-street retail, mall food court, or prime highway spot",
+    stats: [
+      { value: "350+", label: "Outlets Nationwide" },
+      { value: "40+", label: "Cities Reached" },
+      { value: "5.0", label: "Brand Rating" },
+      { value: "10+", label: "Years Experience" },
+    ],
+    starterKit: [
+      {
+        title: "All-Brand Master Setup",
+        desc: "Complete equipment, POS terminal, digital branding, uniform, and launch marketing kit.",
+      },
+    ],
+    menuHeader: "Complete Multi-Brand Culinary Experience",
+    menu: [
+      {
+        section: "Flagship Menu",
+        items: ["Chai & Coffee Bar", "Fusion Paan Collection", "Thick Shakes & Sodas", "Matka Malai Lassi", "Snacks & Burgers"],
+      },
+    ],
+  },
+  {
     key: "chai",
     id: "chai-cafe-king",
     name: "Chai Cafe King",
@@ -86,6 +133,7 @@ export const BRANDS: BrandData[] = [
       "Chai Cafe King is a premium tea café concept offering handcrafted chai, coffee, snacks and café-style experiences in a modern environment. Backed by 10+ years of expertise, we bring authentic Indian chai to every neighbourhood.",
     icon: Coffee,
     logo: "https://customer-assets-m6fa6gv7.emergentagent.net/job_5c36eac6-4afa-404a-9f8a-3a2a73a148f4/artifacts/hhfcca1r_Chai%20Cafe%20King%20Pdf%20File-1.webp",
+    foodImage: "/images/chai-cafe-king-food.png",
     accentGradient: "from-amber-500 via-orange-600 to-rose-700",
     chipBg: "bg-amber-100",
     chipText: "text-amber-950",
@@ -168,6 +216,7 @@ export const BRANDS: BrandData[] = [
       "Paan King — Retail chain of Real taste of Paan. We are the No. 1 retail chain of real taste of paan. We started with the aim to provide fresh, tasty, delicious, hygienic, healthy, and safest products to customers who are looking for something better than others in the market. Welcome to the world of Paan King.",
     icon: Leaf,
     logo: "https://customer-assets-m6fa6gv7.emergentagent.net/job_5c36eac6-4afa-404a-9f8a-3a2a73a148f4/artifacts/8wiq3v7w_PNG%20LOGO%20PAAN.png",
+    foodImage: "/images/paan-king-food.png",
     accentGradient: "from-emerald-500 via-teal-600 to-emerald-800",
     chipBg: "bg-emerald-100",
     chipText: "text-emerald-950",
@@ -248,6 +297,7 @@ export const BRANDS: BrandData[] = [
       "Welcome to the world of Shake & Soda King. Shake & Soda King — Retail chain of Real taste of Shakes. We are the No. 1 retail chain of real taste of shakes. We started with the aim to provide fresh, tasty, delicious, hygienic, healthy, and safest products to customers who are looking for something better than others in the market.",
     icon: GlassWater,
     logo: "https://customer-assets-rejwkqb3.emergentagent.net/job_family-cafe-king/artifacts/viqghbk7_SHAKE%20AND%20SODA%20LOGO.png",
+    foodImage: "/images/shake-soda-king-food.png",
     accentGradient: "from-sky-500 via-indigo-600 to-fuchsia-700",
     chipBg: "bg-sky-100",
     chipText: "text-sky-950",
@@ -331,6 +381,7 @@ export const BRANDS: BrandData[] = [
       "Lassi King — Experience authentic Punjabi lassi crafted from thick fresh curd, topped with rich malai, dry fruits, and natural fruit blends. Refreshment loved by all ages.",
     icon: Milk,
     logo: "https://customer-assets-m6fa6gv7.emergentagent.net/job_5c36eac6-4afa-404a-9f8a-3a2a73a148f4/artifacts/t8gmidb5_FCK%20LOGO.png",
+    foodImage: "/images/lassi-king-food.png",
     accentGradient: "from-yellow-400 via-amber-500 to-orange-700",
     chipBg: "bg-yellow-100",
     chipText: "text-yellow-950",

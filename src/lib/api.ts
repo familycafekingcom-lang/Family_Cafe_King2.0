@@ -52,6 +52,25 @@ export interface MernLaunch {
   created_at?: string;
 }
 
+export interface MernSlide {
+  _id?: string;
+  id?: string;
+  title: string;
+  subtitle?: string;
+  brand_name: string;
+  badge_text?: string;
+  image_url?: string;
+  price_display?: string;
+  space_req?: string;
+  cta_text?: string;
+  cta_link?: string;
+  accent_color?: string;
+  is_active?: boolean;
+  order?: number;
+  createdAt?: string;
+  created_at?: string;
+}
+
 export interface AdminStats {
   totalLeads: number;
   newLeads: number;
@@ -62,6 +81,7 @@ export interface AdminStats {
   totalBookings: number;
   totalContacts: number;
   totalLaunches: number;
+  totalSlides?: number;
 }
 
 const API_BASE = (import.meta.env.VITE_API_URL || "http://localhost:5000/api").replace(/\/$/, "");
@@ -230,6 +250,24 @@ export async function apiCreateLaunch(launchData: Omit<MernLaunch, "_id" | "id">
   };
 }
 
+export async function apiUpdateLaunch(id: string, updates: Partial<MernLaunch>, token?: string): Promise<MernLaunch> {
+  const res = await fetch(`${API_BASE}/launches/${id}`, {
+    method: "PUT",
+    headers: getHeaders(token),
+    body: JSON.stringify(updates),
+  });
+  const data = await res.json();
+  if (!res.ok || !data.success) {
+    throw new Error(data.message || "Failed to update launch card");
+  }
+  const item = data.data;
+  return {
+    ...item,
+    id: item._id || item.id,
+    created_at: item.createdAt || item.created_at || new Date().toISOString(),
+  };
+}
+
 export async function apiDeleteLaunch(id: string, token?: string): Promise<void> {
   const res = await fetch(`${API_BASE}/launches/${id}`, {
     method: "DELETE",
@@ -238,6 +276,69 @@ export async function apiDeleteLaunch(id: string, token?: string): Promise<void>
   const data = await res.json();
   if (!res.ok || !data.success) {
     throw new Error(data.message || "Failed to delete launch card");
+  }
+}
+
+// ================= SLIDER API =================
+export async function apiGetSlides(): Promise<MernSlide[]> {
+  const res = await fetch(`${API_BASE}/slides`, {
+    headers: getHeaders(),
+  });
+  const data = await res.json();
+  if (!res.ok || !data.success) {
+    throw new Error(data.message || "Failed to fetch hero slides");
+  }
+  return (data.data || []).map((item: MernSlide) => ({
+    ...item,
+    id: item._id || item.id,
+    created_at: item.createdAt || item.created_at || new Date().toISOString(),
+  }));
+}
+
+export async function apiCreateSlide(slideData: Omit<MernSlide, "_id" | "id">, token?: string): Promise<MernSlide> {
+  const res = await fetch(`${API_BASE}/slides`, {
+    method: "POST",
+    headers: getHeaders(token),
+    body: JSON.stringify(slideData),
+  });
+  const data = await res.json();
+  if (!res.ok || !data.success) {
+    throw new Error(data.message || "Failed to create hero slide");
+  }
+  const item = data.data;
+  return {
+    ...item,
+    id: item._id || item.id,
+    created_at: item.createdAt || item.created_at || new Date().toISOString(),
+  };
+}
+
+export async function apiUpdateSlide(id: string, updates: Partial<MernSlide>, token?: string): Promise<MernSlide> {
+  const res = await fetch(`${API_BASE}/slides/${id}`, {
+    method: "PUT",
+    headers: getHeaders(token),
+    body: JSON.stringify(updates),
+  });
+  const data = await res.json();
+  if (!res.ok || !data.success) {
+    throw new Error(data.message || "Failed to update hero slide");
+  }
+  const item = data.data;
+  return {
+    ...item,
+    id: item._id || item.id,
+    created_at: item.createdAt || item.created_at || new Date().toISOString(),
+  };
+}
+
+export async function apiDeleteSlide(id: string, token?: string): Promise<void> {
+  const res = await fetch(`${API_BASE}/slides/${id}`, {
+    method: "DELETE",
+    headers: getHeaders(token),
+  });
+  const data = await res.json();
+  if (!res.ok || !data.success) {
+    throw new Error(data.message || "Failed to delete hero slide");
   }
 }
 

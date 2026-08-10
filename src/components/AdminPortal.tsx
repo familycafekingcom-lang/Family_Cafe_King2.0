@@ -6,6 +6,7 @@ import {
   Clock,
   Crown,
   Download,
+  Edit3,
   Filter,
   Inbox,
   Loader2,
@@ -18,24 +19,38 @@ import {
   RefreshCw,
   Search,
   ShieldCheck,
+  Sliders,
   Sparkles,
+  Sun,
+  Moon,
   Trash2,
   TrendingUp,
   Users,
+  Eye,
+  EyeOff,
+  Save,
+  XCircle,
 } from "lucide-react";
 import {
+  DEFAULT_SLIDES,
   DEFAULT_UPCOMING,
   deleteLaunch,
   deleteLead,
+  deleteSlide,
   leadsToCsv,
   listLaunches,
   listLeads,
+  listSlides,
   saveLaunch,
+  saveSlide,
   signInAdmin,
+  updateLaunch,
   updateLead,
+  updateSlide,
   type LaunchRecord,
   type LeadRecord,
   type LeadStatus,
+  type SlideRecord,
 } from "../lib/database";
 import {
   apiDeleteBooking,
@@ -70,6 +85,8 @@ const statusClass = (status: LeadStatus) => {
   }
 };
 
+export type DashboardMood = "night" | "morning";
+
 export function AdminPortal() {
   const [session, setSession] = useState<AdminSession | null>(() => {
     const raw = window.sessionStorage.getItem("fck_admin_session");
@@ -80,16 +97,38 @@ export function AdminPortal() {
     }
   });
 
+  const [mood, setMood] = useState<DashboardMood>(() => {
+    try {
+      const saved = window.localStorage.getItem("fck_dashboard_mood");
+      return saved === "morning" || saved === "night" ? saved : "night";
+    } catch {
+      return "night";
+    }
+  });
+
+  const toggleMood = () => {
+    const next = mood === "night" ? "morning" : "night";
+    setMood(next);
+    try {
+      window.localStorage.setItem("fck_dashboard_mood", next);
+    } catch {
+      // Ignore storage errors
+    }
+  };
+
+  const isNight = mood === "night";
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [authError, setAuthError] = useState("");
   const [authLoading, setAuthLoading] = useState(false);
 
-  const [activeTab, setActiveTab] = useState<"overview" | "leads" | "launches" | "bookings" | "contacts">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "leads" | "launches" | "slides" | "bookings" | "contacts">("overview");
   const [isMernOnline, setIsMernOnline] = useState<boolean | null>(null);
 
   const [leads, setLeads] = useState<LeadRecord[]>([]);
   const [launches, setLaunches] = useState<LaunchRecord[]>([]);
+  const [slides, setSlides] = useState<SlideRecord[]>([]);
   const [bookings, setBookings] = useState<MernBooking[]>([]);
   const [contacts, setContacts] = useState<MernContact[]>([]);
 
@@ -108,6 +147,25 @@ export function AdminPortal() {
     accent: "#8C1F28",
   });
 
+  const [editingLaunch, setEditingLaunch] = useState<LaunchRecord | null>(null);
+
+  const [slideForm, setSlideForm] = useState({
+    title: "",
+    subtitle: "",
+    brand_name: "Family Cafe King",
+    badge_text: "350+ Franchises All Over India",
+    image_url: DEFAULT_SLIDES[0].image_url,
+    price_display: "₹5 - 15 Lakhs",
+    space_req: "150 - 500 sq.ft",
+    cta_text: "Apply for Franchise",
+    cta_link: "#lead",
+    accent_color: "#8C1F28",
+    is_active: true,
+    order: 0,
+  });
+
+  const [editingSlide, setEditingSlide] = useState<SlideRecord | null>(null);
+
   const checkHealth = useCallback(async () => {
     const healthy = await checkBackendHealth();
     setIsMernOnline(healthy);
@@ -119,12 +177,14 @@ export function AdminPortal() {
     setDataError("");
     try {
       await checkHealth();
-      const [leadRows, launchRows] = await Promise.all([
+      const [leadRows, launchRows, slideRows] = await Promise.all([
         listLeads(session.accessToken),
         listLaunches(session.accessToken),
+        listSlides(session.accessToken),
       ]);
       setLeads(leadRows);
       setLaunches(launchRows);
+      setSlides(slideRows);
 
       try {
         const [bookingRows, contactRows] = await Promise.all([
@@ -180,10 +240,11 @@ export function AdminPortal() {
       converted: leads.filter((lead) => lead.status === "Converted").length,
       lost: leads.filter((lead) => lead.status === "Lost").length,
       launchesCount: launches.length,
+      slidesCount: slides.length,
       bookingsCount: bookings.length,
       contactsCount: contacts.length,
     }),
-    [leads, launches, bookings, contacts]
+    [leads, launches, slides, bookings, contacts]
   );
 
   const fillDefaultCredentials = () => {
@@ -268,6 +329,103 @@ export function AdminPortal() {
     }
   };
 
+  const saveEditLaunch = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!session || !editingLaunch) return;
+    try {
+      const updated = await updateLaunch(
+        editingLaunch.id,
+        {
+          city: editingLaunch.city,
+          brand: editingLaunch.brand,
+          date_text: editingLaunch.date_text,
+          image_data: editingLaunch.image_data,
+          tag: editingLaunch.tag,
+          accent: editingLaunch.accent,
+        },
+        session.accessToken
+      );
+      setLaunches((current) => current.map((l) => (l.id === updated.id ? updated : l)));
+      setEditingLaunch(null);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to update upcoming launch");
+    }
+  };
+
+  const addSlide = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!session) return;
+    try {
+      const saved = await saveSlide(slideForm, session.accessToken);
+      setSlides((current) => [...current, saved]);
+      setSlideForm({
+        title: "",
+        subtitle: "",
+        brand_name: "Family Cafe King",
+        badge_text: "350+ Franchises All Over India",
+        image_url: DEFAULT_SLIDES[0].image_url,
+        price_display: "₹5 - 15 Lakhs",
+        space_req: "150 - 500 sq.ft",
+        cta_text: "Apply for Franchise",
+        cta_link: "#lead",
+        accent_color: "#8C1F28",
+        is_active: true,
+        order: slides.length,
+      });
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to create hero slide");
+    }
+  };
+
+  const saveEditSlide = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!session || !editingSlide) return;
+    try {
+      const updated = await updateSlide(
+        editingSlide.id,
+        {
+          title: editingSlide.title,
+          subtitle: editingSlide.subtitle,
+          brand_name: editingSlide.brand_name,
+          badge_text: editingSlide.badge_text,
+          image_url: editingSlide.image_url,
+          price_display: editingSlide.price_display,
+          space_req: editingSlide.space_req,
+          cta_text: editingSlide.cta_text,
+          cta_link: editingSlide.cta_link,
+          accent_color: editingSlide.accent_color,
+          is_active: editingSlide.is_active,
+          order: editingSlide.order,
+        },
+        session.accessToken
+      );
+      setSlides((current) => current.map((s) => (s.id === updated.id ? updated : s)));
+      setEditingSlide(null);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to update hero slide");
+    }
+  };
+
+  const toggleSlideActive = async (slide: SlideRecord) => {
+    if (!session) return;
+    try {
+      const updated = await updateSlide(slide.id, { is_active: !slide.is_active }, session.accessToken);
+      setSlides((current) => current.map((s) => (s.id === updated.id ? updated : s)));
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Could not toggle slide status");
+    }
+  };
+
+  const removeSlide = async (id: string) => {
+    if (!session || !window.confirm("Delete this hero slide?")) return;
+    try {
+      await deleteSlide(id, session.accessToken);
+      setSlides((current) => current.filter((s) => s.id !== id));
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Could not delete slide");
+    }
+  };
+
   const removeLaunch = async (id: string) => {
     if (!session || !window.confirm("Delete this upcoming launch card?")) return;
     await deleteLaunch(id, session.accessToken);
@@ -286,63 +444,98 @@ export function AdminPortal() {
 
   if (!session) {
     return (
-      <main className="grid min-h-screen place-items-center bg-[#0d0708] px-4 py-12 text-slate-100 font-sans selection:bg-amber-500 selection:text-black">
-        <div className="w-full max-w-md rounded-3xl border border-amber-500/20 bg-slate-900/90 p-8 shadow-2xl backdrop-blur-2xl">
-          <a href="#top" className="mb-6 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-amber-400 hover:text-amber-300">
-            <ArrowLeft size={14} /> Return to customer site
-          </a>
+      <main className={`grid min-h-screen place-items-center px-4 py-12 font-sans transition-colors duration-300 ${
+        isNight
+          ? "bg-[#0d0708] text-slate-100 selection:bg-amber-500 selection:text-black"
+          : "bg-gradient-to-br from-amber-50 via-orange-50/50 to-amber-100/80 text-slate-900 selection:bg-amber-400 selection:text-slate-900"
+      }`}>
+        <div className={`w-full max-w-md rounded-3xl border p-8 shadow-2xl backdrop-blur-2xl transition-colors duration-300 ${
+          isNight
+            ? "border-amber-500/20 bg-slate-900/90"
+            : "border-amber-200/80 bg-white/95 text-slate-900 shadow-amber-950/10"
+        }`}>
+          <div className="mb-6 flex items-center justify-between">
+            <a href="#top" className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-amber-500 hover:text-amber-400">
+              <ArrowLeft size={14} /> Return to site
+            </a>
+            <button
+              type="button"
+              onClick={toggleMood}
+              className={`inline-flex items-center justify-center rounded-xl p-2 transition-all ${
+                isNight
+                  ? "bg-slate-800 border border-slate-700 text-amber-300 hover:bg-slate-700"
+                  : "bg-amber-100 border border-amber-300 text-amber-950 hover:bg-amber-200 shadow-sm"
+              }`}
+              title={isNight ? "Switch theme" : "Switch theme"}
+            >
+              {isNight ? (
+                <Moon size={16} className="text-amber-300" />
+              ) : (
+                <Sun size={16} className="text-amber-600" />
+              )}
+            </button>
+          </div>
 
           <div className="flex items-center gap-4">
             <span className="grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-tr from-amber-600 via-orange-600 to-rose-700 text-white shadow-lg shadow-amber-900/40">
               <ShieldCheck size={28} />
             </span>
             <div>
-              <h1 className="font-display text-2xl font-black tracking-tight text-white">Admin Portal</h1>
-              <p className="text-xs font-medium text-slate-400">
-                Family Cafe King Management
+              <h1 className={`font-display text-2xl font-black tracking-tight ${isNight ? "text-white" : "text-slate-900"}`}>
+                Admin & Franchise Portal
+              </h1>
+              <p className={`text-xs font-medium ${isNight ? "text-slate-400" : "text-amber-900/70"}`}>
+                Family Cafe King Management & Franchisee Portal
               </p>
             </div>
           </div>
 
           {/* Connection status indicator */}
-          <div className="mt-6 flex items-center justify-between rounded-xl border border-slate-800 bg-slate-950/60 px-4 py-2.5 text-xs font-semibold">
-            <span className="text-slate-400">Backend Server</span>
+          <div className={`mt-6 flex items-center justify-between rounded-xl border px-4 py-2.5 text-xs font-semibold ${
+            isNight ? "border-slate-800 bg-slate-950/60" : "border-amber-200 bg-amber-50/60"
+          }`}>
+            <span className={isNight ? "text-slate-400" : "text-amber-900/80"}>Backend System</span>
             <span className="inline-flex items-center gap-2 font-bold">
               <span className={`h-2.5 w-2.5 rounded-full ${isMernOnline ? "bg-emerald-500 animate-pulse" : "bg-amber-500"}`} />
-              {isMernOnline ? "MERN Express (Active)" : "Local Offline Mode"}
+              {isMernOnline ? "MERN Express (Online)" : "Local / Offline Mode"}
             </span>
           </div>
 
           <form onSubmit={login} className="mt-6 space-y-4">
             <AdminField
-              label="Admin Email"
+              label="Admin / Partner Email"
               value={email}
               onChange={setEmail}
               type="email"
               required
-              placeholder="admin@familycafeking.com"
+              placeholder="shivamsri.srivastava2@gmail.com"
+              isNight={isNight}
             />
             <AdminField
-              label="Admin Password"
+              label="Password"
               value={password}
               onChange={setPassword}
               type="password"
               required
               placeholder="••••••••"
+              isNight={isNight}
             />
 
-            <div className="flex items-center justify-between text-xs">
+            <div className="flex flex-col gap-1 text-xs">
               <button
                 type="button"
                 onClick={fillDefaultCredentials}
-                className="text-amber-400 hover:underline font-bold"
+                className="text-left text-amber-500 hover:underline font-bold"
               >
-                Auto-fill default admin
+                Auto-fill default admin credentials
               </button>
+              <span className={`text-[11px] ${isNight ? "text-slate-400" : "text-amber-900/70"}`}>
+                Default: <code className="text-amber-500 font-mono font-bold">shivamsri.srivastava2@gmail.com</code> / <code className="text-amber-500 font-mono font-bold">Shivam@1234</code>
+              </span>
             </div>
 
             {authError && (
-              <p className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-xs font-bold text-rose-300">
+              <p className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-xs font-bold text-rose-400">
                 {authError}
               </p>
             )}
@@ -353,7 +546,7 @@ export function AdminPortal() {
               className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-amber-500 via-orange-600 to-rose-600 px-5 py-4 font-black tracking-wide text-white shadow-xl shadow-amber-900/20 hover:brightness-110 disabled:opacity-70 transition-all"
             >
               {authLoading && <Loader2 size={18} className="animate-spin" />}
-              Sign In to Admin Dashboard
+              Sign In to Portal
             </button>
           </form>
         </div>
@@ -362,9 +555,15 @@ export function AdminPortal() {
   }
 
   return (
-    <main className="min-h-screen bg-[#0a0708] text-slate-100 font-sans selection:bg-amber-500 selection:text-black">
+    <main className={`min-h-screen font-sans transition-colors duration-300 ${
+      isNight
+        ? "bg-[#0a0708] text-slate-100 selection:bg-amber-500 selection:text-black"
+        : "bg-gradient-to-br from-amber-50 via-orange-50/40 to-amber-100/70 text-slate-900 selection:bg-amber-400 selection:text-slate-900"
+    }`}>
       {/* Header Bar */}
-      <header className="sticky top-0 z-40 border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-xl">
+      <header className={`sticky top-0 z-40 border-b backdrop-blur-xl transition-colors duration-300 ${
+        isNight ? "border-slate-800/80 bg-slate-950/80" : "border-amber-200/80 bg-white/90 shadow-sm"
+      }`}>
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-6 py-4">
           <div className="flex items-center gap-3.5">
             <span className="grid h-11 w-11 place-items-center rounded-2xl bg-gradient-to-tr from-amber-500 via-orange-600 to-rose-700 text-white shadow-md">
@@ -372,35 +571,53 @@ export function AdminPortal() {
             </span>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="font-display text-xl font-black text-white sm:text-2xl">
+                <h1 className={`font-display text-xl font-black sm:text-2xl ${isNight ? "text-white" : "text-slate-900"}`}>
                   Family Cafe King
                 </h1>
-                <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-widest text-amber-400">
+                <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-widest text-amber-500">
                   Admin CRM
                 </span>
               </div>
-              <p className="text-xs font-bold text-slate-400">
+              <p className={`text-xs font-bold ${isNight ? "text-slate-400" : "text-amber-900/70"}`}>
                 {isMernOnline ? "🟢 Connected to MongoDB Backend" : "🟡 Local Fallback Mode"} · {session.email}
               </p>
             </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-2.5">
+            <button
+              type="button"
+              onClick={toggleMood}
+              className={`inline-flex items-center justify-center rounded-xl p-2.5 transition-all ${
+                isNight
+                  ? "bg-slate-900 border border-amber-500/30 text-amber-400 hover:bg-slate-800 shadow-md shadow-amber-950/20"
+                  : "bg-amber-100 border border-amber-300 text-amber-950 hover:bg-amber-200 shadow-md shadow-amber-500/10"
+              }`}
+              title={isNight ? "Switch theme" : "Switch theme"}
+            >
+              {isNight ? (
+                <Moon size={16} className="text-amber-400" />
+              ) : (
+                <Sun size={16} className="text-amber-600" />
+              )}
+            </button>
             <a
               href="#top"
-              className="rounded-xl border border-slate-700 bg-slate-900 px-4 py-2 text-xs font-bold text-slate-300 hover:bg-slate-800"
+              className={`rounded-xl border px-4 py-2 text-xs font-bold ${
+                isNight ? "border-slate-700 bg-slate-900 text-slate-300 hover:bg-slate-800" : "border-amber-300 bg-white text-slate-800 hover:bg-amber-50 shadow-sm"
+              }`}
             >
               Live Site
             </a>
             <button
               onClick={() => void loadData()}
-              className="inline-flex items-center gap-2 rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-2 text-xs font-bold text-amber-400 hover:bg-amber-500/20"
+              className="inline-flex items-center gap-2 rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-2 text-xs font-bold text-amber-500 hover:bg-amber-500/20"
             >
               <RefreshCw size={14} className={dataLoading ? "animate-spin" : ""} /> Refresh
             </button>
             <button
               onClick={logout}
-              className="inline-flex items-center gap-2 rounded-xl bg-rose-600/20 border border-rose-500/40 px-4 py-2 text-xs font-bold text-rose-300 hover:bg-rose-600/30"
+              className="inline-flex items-center gap-2 rounded-xl bg-rose-600/20 border border-rose-500/40 px-4 py-2 text-xs font-bold text-rose-400 hover:bg-rose-600/30"
             >
               <LogOut size={14} /> Logout
             </button>
@@ -409,10 +626,11 @@ export function AdminPortal() {
 
         {/* Tab Navigation */}
         <div className="mx-auto max-w-7xl px-6">
-          <nav className="flex gap-2 overflow-x-auto border-t border-slate-800/60 py-2.5">
+          <nav className={`flex gap-2 overflow-x-auto border-t py-2.5 ${isNight ? "border-slate-800/60" : "border-amber-200/60"}`}>
             {[
               { id: "overview", label: "Overview", icon: <TrendingUp size={15} /> },
               { id: "leads", label: `Franchise Leads (${stats.total})`, icon: <Users size={15} /> },
+              { id: "slides", label: `Hero Slider (${stats.slidesCount})`, icon: <Sliders size={15} /> },
               { id: "launches", label: `Upcoming Launches (${stats.launchesCount})`, icon: <MapPin size={15} /> },
               { id: "bookings", label: `Bookings (${stats.bookingsCount})`, icon: <Calendar size={15} /> },
               { id: "contacts", label: `Inquiries (${stats.contactsCount})`, icon: <Inbox size={15} /> },
@@ -422,8 +640,10 @@ export function AdminPortal() {
                 onClick={() => setActiveTab(tab.id as typeof activeTab)}
                 className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all whitespace-nowrap ${
                   activeTab === tab.id
-                    ? "bg-amber-500 text-black shadow-lg shadow-amber-500/20"
-                    : "text-slate-400 hover:bg-slate-900 hover:text-white"
+                    ? "bg-amber-500 text-black shadow-lg shadow-amber-500/20 font-black"
+                    : isNight
+                      ? "text-slate-400 hover:bg-slate-900 hover:text-white"
+                      : "text-amber-900/80 hover:bg-amber-100 hover:text-amber-950 font-bold"
                 }`}
               >
                 {tab.icon}
@@ -447,15 +667,17 @@ export function AdminPortal() {
           <div className="space-y-8">
             {/* KPI Grid */}
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <AdminStat icon={<Users size={22} />} label="Total Franchise Leads" value={stats.total} badge="Lifetime" />
-              <AdminStat icon={<Sparkles size={22} />} label="New Inquiries" value={stats.new} badge="Action Required" highlight />
-              <AdminStat icon={<CheckCircle2 size={22} />} label="Converted Franchisees" value={stats.converted} badge="Success" />
-              <AdminStat icon={<MapPin size={22} />} label="Upcoming City Launches" value={stats.launchesCount} badge="Active" />
+              <AdminStat icon={<Users size={22} />} label="Total Franchise Leads" value={stats.total} badge="Lifetime" isNight={isNight} />
+              <AdminStat icon={<Sparkles size={22} />} label="New Inquiries" value={stats.new} badge="Action Required" highlight isNight={isNight} />
+              <AdminStat icon={<CheckCircle2 size={22} />} label="Converted Franchisees" value={stats.converted} badge="Success" isNight={isNight} />
+              <AdminStat icon={<MapPin size={22} />} label="Upcoming City Launches" value={stats.launchesCount} badge="Active" isNight={isNight} />
             </div>
 
             {/* Pipeline Status Breakdown */}
-            <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-6 backdrop-blur-xl">
-              <h2 className="font-display text-lg font-bold text-white mb-4">Lead Status Pipeline</h2>
+            <div className={`rounded-3xl border p-6 backdrop-blur-xl transition-all ${
+              isNight ? "border-slate-800 bg-slate-900/60" : "border-amber-200/80 bg-white/90 shadow-xl shadow-amber-950/5"
+            }`}>
+              <h2 className={`font-display text-lg font-bold mb-4 ${isNight ? "text-white" : "text-slate-900"}`}>Lead Status Pipeline</h2>
               <div className="grid gap-3 sm:grid-cols-5">
                 {[
                   { status: "New", count: stats.new, color: "bg-amber-500" },
@@ -464,10 +686,12 @@ export function AdminPortal() {
                   { status: "Converted", count: stats.converted, color: "bg-green-400" },
                   { status: "Lost", count: stats.lost, color: "bg-rose-500" },
                 ].map((item) => (
-                  <div key={item.status} className="rounded-2xl border border-slate-800 bg-slate-950 p-4">
-                    <p className="text-xs font-bold uppercase tracking-wider text-slate-400">{item.status}</p>
-                    <p className="mt-2 text-2xl font-black text-white">{item.count}</p>
-                    <div className="mt-3 h-1.5 w-full rounded-full bg-slate-800 overflow-hidden">
+                  <div key={item.status} className={`rounded-2xl border p-4 ${
+                    isNight ? "border-slate-800 bg-slate-950" : "border-amber-200/80 bg-amber-50/50"
+                  }`}>
+                    <p className={`text-xs font-bold uppercase tracking-wider ${isNight ? "text-slate-400" : "text-amber-900/70"}`}>{item.status}</p>
+                    <p className={`mt-2 text-2xl font-black ${isNight ? "text-white" : "text-slate-900"}`}>{item.count}</p>
+                    <div className={`mt-3 h-1.5 w-full rounded-full overflow-hidden ${isNight ? "bg-slate-800" : "bg-amber-200"}`}>
                       <div
                         className={`h-full ${item.color}`}
                         style={{ width: `${stats.total > 0 ? (item.count / stats.total) * 100 : 0}%` }}
@@ -480,33 +704,39 @@ export function AdminPortal() {
 
             {/* Quick Actions & Recent Stream */}
             <div className="grid gap-6 lg:grid-cols-2">
-              <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-6">
+              <div className={`rounded-3xl border p-6 ${
+                isNight ? "border-slate-800 bg-slate-900/60" : "border-amber-200/80 bg-white/90 shadow-xl shadow-amber-950/5"
+              }`}>
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-display text-lg font-bold text-white">Recent Inquiries Stream</h3>
-                  <button onClick={() => setActiveTab("leads")} className="text-xs font-bold text-amber-400 hover:underline">
+                  <h3 className={`font-display text-lg font-bold ${isNight ? "text-white" : "text-slate-900"}`}>Recent Inquiries Stream</h3>
+                  <button onClick={() => setActiveTab("leads")} className="text-xs font-bold text-amber-500 hover:underline">
                     View All Leads &rarr;
                   </button>
                 </div>
                 <div className="space-y-3">
                   {leads.slice(0, 5).map((lead) => (
-                    <div key={lead.id} className="flex items-center justify-between rounded-2xl border border-slate-800 bg-slate-950 p-4">
+                    <div key={lead.id} className={`flex items-center justify-between rounded-2xl border p-4 ${
+                      isNight ? "border-slate-800 bg-slate-950" : "border-amber-200/70 bg-amber-50/30"
+                    }`}>
                       <div>
-                        <p className="font-bold text-white">{lead.name} <span className="text-xs font-normal text-slate-400">({lead.city})</span></p>
-                        <p className="text-xs font-semibold text-amber-400">{lead.brand} · {lead.budget}</p>
+                        <p className={`font-bold ${isNight ? "text-white" : "text-slate-900"}`}>{lead.name} <span className={`text-xs font-normal ${isNight ? "text-slate-400" : "text-amber-900/70"}`}>({lead.city})</span></p>
+                        <p className="text-xs font-semibold text-amber-500">{lead.brand} · {lead.budget}</p>
                       </div>
                       <span className={`rounded-full border px-2.5 py-0.5 text-[11px] font-bold ${statusClass(lead.status)}`}>
                         {lead.status}
                       </span>
                     </div>
                   ))}
-                  {leads.length === 0 && <p className="text-xs text-slate-500">No leads submitted yet.</p>}
+                  {leads.length === 0 && <p className="text-xs text-slate-400">No leads submitted yet.</p>}
                 </div>
               </div>
 
-              <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-6 flex flex-col justify-between">
+              <div className={`rounded-3xl border p-6 flex flex-col justify-between ${
+                isNight ? "border-slate-800 bg-slate-900/60" : "border-amber-200/80 bg-white/90 shadow-xl shadow-amber-950/5"
+              }`}>
                 <div>
-                  <h3 className="font-display text-lg font-bold text-white mb-2">Export & Utilities</h3>
-                  <p className="text-xs text-slate-400 mb-6">Download lead database in standard CSV format for CRM import or email marketing.</p>
+                  <h3 className={`font-display text-lg font-bold mb-2 ${isNight ? "text-white" : "text-slate-900"}`}>Export & Utilities</h3>
+                  <p className={`text-xs mb-6 ${isNight ? "text-slate-400" : "text-amber-900/70"}`}>Download lead database in standard CSV format for CRM import or email marketing.</p>
                   <button
                     onClick={downloadCsv}
                     className="inline-flex items-center gap-2 rounded-2xl bg-emerald-600 px-5 py-3.5 text-xs font-extrabold text-white hover:bg-emerald-500 shadow-lg shadow-emerald-900/30 transition-all"
@@ -514,7 +744,9 @@ export function AdminPortal() {
                     <Download size={16} /> Export All Leads (CSV)
                   </button>
                 </div>
-                <div className="mt-6 rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4 text-xs text-amber-300">
+                <div className={`mt-6 rounded-2xl border p-4 text-xs ${
+                  isNight ? "border-amber-500/20 bg-amber-500/5 text-amber-300" : "border-amber-300/60 bg-amber-100/60 text-amber-950 font-medium"
+                }`}>
                   💡 <b>Tip:</b> Leads submitted by users on the landing page are saved directly to MongoDB and trigger instant dashboard notifications.
                 </div>
               </div>
@@ -524,11 +756,13 @@ export function AdminPortal() {
 
         {/* LEADS CRM TAB */}
         {activeTab === "leads" && (
-          <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-6 backdrop-blur-xl">
+          <div className={`rounded-3xl border p-6 backdrop-blur-xl ${
+            isNight ? "border-slate-800 bg-slate-900/60" : "border-amber-200/80 bg-white/90 shadow-xl shadow-amber-950/5"
+          }`}>
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
-                <h2 className="font-display text-xl font-black text-white">Franchise Lead CRM</h2>
-                <p className="text-xs font-medium text-slate-400">Search, filter, update status, add notes, and contact prospects.</p>
+                <h2 className={`font-display text-xl font-black ${isNight ? "text-white" : "text-slate-900"}`}>Franchise Lead CRM</h2>
+                <p className={`text-xs font-medium ${isNight ? "text-slate-400" : "text-amber-900/70"}`}>Search, filter, update status, add notes, and contact prospects.</p>
               </div>
               <button
                 onClick={downloadCsv}
@@ -541,25 +775,31 @@ export function AdminPortal() {
             {/* Filter controls */}
             <div className="mt-6 grid gap-3 lg:grid-cols-[1fr_220px_190px]">
               <div className="relative block">
-                <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                <Search size={16} className={`absolute left-4 top-1/2 -translate-y-1/2 ${isNight ? "text-slate-400" : "text-amber-700"}`} />
                 <input
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder="Search lead by name, phone, city, budget..."
-                  className="w-full rounded-2xl border border-slate-800 bg-slate-950 py-3 pl-10 pr-4 text-xs font-bold text-white outline-none focus:border-amber-500"
+                  className={`w-full rounded-2xl border py-3 pl-10 pr-4 text-xs font-bold outline-none transition-all ${
+                    isNight ? "border-slate-800 bg-slate-950 text-white focus:border-amber-500" : "border-amber-200 bg-amber-50/50 text-slate-900 focus:border-amber-600 shadow-sm"
+                  }`}
                 />
               </div>
               <select
                 value={brandFilter}
                 onChange={(e) => setBrandFilter(e.target.value)}
-                className="rounded-2xl border border-slate-800 bg-slate-950 px-4 py-3 text-xs font-bold text-white outline-none focus:border-amber-500"
+                className={`rounded-2xl border px-4 py-3 text-xs font-bold outline-none transition-all ${
+                  isNight ? "border-slate-800 bg-slate-950 text-white focus:border-amber-500" : "border-amber-200 bg-amber-50/50 text-slate-900 focus:border-amber-600 shadow-sm"
+                }`}
               >
                 {brandOptions.map((b) => <option key={b}>{b}</option>)}
               </select>
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="rounded-2xl border border-slate-800 bg-slate-950 px-4 py-3 text-xs font-bold text-white outline-none focus:border-amber-500"
+                className={`rounded-2xl border px-4 py-3 text-xs font-bold outline-none transition-all ${
+                  isNight ? "border-slate-800 bg-slate-950 text-white focus:border-amber-500" : "border-amber-200 bg-amber-50/50 text-slate-900 focus:border-amber-600 shadow-sm"
+                }`}
               >
                 {["All statuses", ...LEAD_STATUSES].map((s) => <option key={s}>{s}</option>)}
               </select>
@@ -568,33 +808,39 @@ export function AdminPortal() {
             {/* Leads Cards */}
             <div className="mt-6 space-y-4">
               {filteredLeads.length === 0 && (
-                <div className="rounded-2xl border border-dashed border-slate-800 bg-slate-950 px-5 py-12 text-center">
-                  <Filter size={28} className="mx-auto text-slate-500 mb-2" />
-                  <p className="text-sm font-bold text-slate-400">No matching leads found.</p>
+                <div className={`rounded-2xl border border-dashed px-5 py-12 text-center ${
+                  isNight ? "border-slate-800 bg-slate-950" : "border-amber-200 bg-amber-50/40"
+                }`}>
+                  <Filter size={28} className="mx-auto text-amber-500 mb-2" />
+                  <p className={`text-sm font-bold ${isNight ? "text-slate-400" : "text-amber-900/70"}`}>No matching leads found.</p>
                 </div>
               )}
 
               {filteredLeads.map((lead) => (
-                <article key={lead.id} className="rounded-3xl border border-slate-800/80 bg-slate-950 p-5 hover:border-slate-700 transition-all">
+                <article key={lead.id} className={`rounded-3xl border p-5 transition-all ${
+                  isNight ? "border-slate-800/80 bg-slate-950 hover:border-slate-700" : "border-amber-200/80 bg-white hover:border-amber-300 shadow-md shadow-amber-950/5"
+                }`}>
                   <div className="flex flex-wrap items-start justify-between gap-4">
                     <div>
                       <div className="flex items-center gap-3">
-                        <h3 className="font-display text-lg font-bold text-white">{lead.name}</h3>
+                        <h3 className={`font-display text-lg font-bold ${isNight ? "text-white" : "text-slate-900"}`}>{lead.name}</h3>
                         <span className={`rounded-full border px-3 py-0.5 text-[11px] font-extrabold ${statusClass(lead.status)}`}>
                           {lead.status}
                         </span>
                       </div>
-                      <p className="mt-1 text-xs font-bold text-amber-400">
+                      <p className="mt-1 text-xs font-bold text-amber-500">
                         {lead.brand} · Budget: {lead.budget}
                       </p>
-                      <p className="mt-1 flex items-center gap-1.5 text-xs text-slate-400">
+                      <p className={`mt-1 flex items-center gap-1.5 text-xs ${isNight ? "text-slate-400" : "text-amber-900/70"}`}>
                         <MapPin size={13} className="text-orange-500" /> {lead.city} · <Clock size={13} /> {new Date(lead.created_at).toLocaleString()}
                       </p>
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
                       <a
                         href={`tel:${lead.phone.replace(/\s/g, "")}`}
-                        className="inline-flex items-center gap-1.5 rounded-xl bg-slate-800 border border-slate-700 px-3 py-1.5 text-xs font-bold text-white hover:bg-slate-700"
+                        className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-bold ${
+                          isNight ? "bg-slate-800 border-slate-700 text-white hover:bg-slate-700" : "bg-amber-100 border-amber-300 text-amber-950 hover:bg-amber-200"
+                        }`}
                       >
                         <Phone size={13} /> Call
                       </a>
@@ -602,13 +848,13 @@ export function AdminPortal() {
                         href={`https://wa.me/${lead.phone.replace(/\D/g, "")}`}
                         target="_blank"
                         rel="noreferrer"
-                        className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600/20 border border-emerald-500/30 px-3 py-1.5 text-xs font-bold text-emerald-300 hover:bg-emerald-600/30"
+                        className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600/20 border border-emerald-500/30 px-3 py-1.5 text-xs font-bold text-emerald-600 hover:bg-emerald-600/30"
                       >
                         <MessageCircle size={13} /> WhatsApp
                       </a>
                       <button
                         onClick={() => void removeLead(lead.id)}
-                        className="inline-flex items-center gap-1.5 rounded-xl bg-rose-600/20 border border-rose-500/30 px-3 py-1.5 text-xs font-bold text-rose-300 hover:bg-rose-600/30"
+                        className="inline-flex items-center gap-1.5 rounded-xl bg-rose-600/20 border border-rose-500/30 px-3 py-1.5 text-xs font-bold text-rose-500 hover:bg-rose-600/30"
                       >
                         <Trash2 size={13} /> Delete
                       </button>
@@ -617,7 +863,9 @@ export function AdminPortal() {
 
                   {/* Details Grid & Status/Notes Controls */}
                   <div className="mt-4 grid gap-4 lg:grid-cols-[1fr_240px]">
-                    <div className="grid gap-2 rounded-2xl border border-slate-800 bg-slate-900/60 p-3 text-xs text-slate-300 sm:grid-cols-2">
+                    <div className={`grid gap-2 rounded-2xl border p-3 text-xs sm:grid-cols-2 ${
+                      isNight ? "border-slate-800 bg-slate-900/60 text-slate-300" : "border-amber-200/70 bg-amber-50/50 text-slate-800"
+                    }`}>
                       <p><b>Phone:</b> {lead.phone}</p>
                       <p><b>Email:</b> {lead.email || "N/A"}</p>
                       <p><b>Budget:</b> {lead.budget}</p>
@@ -627,7 +875,9 @@ export function AdminPortal() {
                       <select
                         value={lead.status}
                         onChange={(e) => void saveLeadField(lead.id, { status: e.target.value as LeadStatus })}
-                        className="w-full rounded-xl border border-slate-800 bg-slate-900 px-3 py-2 text-xs font-bold text-white outline-none focus:border-amber-500"
+                        className={`w-full rounded-xl border px-3 py-2 text-xs font-bold outline-none ${
+                          isNight ? "border-slate-800 bg-slate-900 text-white focus:border-amber-500" : "border-amber-200 bg-amber-50/60 text-slate-900 focus:border-amber-600"
+                        }`}
                       >
                         {LEAD_STATUSES.map((s) => <option key={s}>{s}</option>)}
                       </select>
@@ -639,7 +889,9 @@ export function AdminPortal() {
                           }
                         }}
                         placeholder="Add follow-up notes..."
-                        className="w-full rounded-xl border border-slate-800 bg-slate-900 px-3 py-2 text-xs text-white placeholder:text-slate-500 outline-none focus:border-amber-500"
+                        className={`w-full rounded-xl border px-3 py-2 text-xs outline-none ${
+                          isNight ? "border-slate-800 bg-slate-900 text-white placeholder:text-slate-500 focus:border-amber-500" : "border-amber-200 bg-amber-50/60 text-slate-900 placeholder:text-slate-400 focus:border-amber-600"
+                        }`}
                       />
                     </div>
                   </div>
@@ -651,35 +903,41 @@ export function AdminPortal() {
 
         {/* UPCOMING LAUNCHES TAB */}
         {activeTab === "launches" && (
-          <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-6 backdrop-blur-xl">
+          <div className={`rounded-3xl border p-6 backdrop-blur-xl ${
+            isNight ? "border-slate-800 bg-slate-900/60" : "border-amber-200/80 bg-white/90 shadow-xl shadow-amber-950/5"
+          }`}>
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
-                <h2 className="font-display text-xl font-black text-white">Upcoming Franchise Launch Manager</h2>
-                <p className="text-xs font-medium text-slate-400">Add or manage city launch cards rendered live on the website.</p>
+                <h2 className={`font-display text-xl font-black ${isNight ? "text-white" : "text-slate-900"}`}>Upcoming Franchise Launch Manager</h2>
+                <p className={`text-xs font-medium ${isNight ? "text-slate-400" : "text-amber-900/70"}`}>Add or manage city launch cards rendered live on the website.</p>
               </div>
             </div>
 
             {/* Add Launch Form */}
             <form onSubmit={addLaunch} className="mt-6 grid gap-3 lg:grid-cols-[140px_1fr_160px_1fr_140px_80px_auto]">
-              <AdminMiniInput placeholder="City Name" value={launchForm.city} onChange={(val) => setLaunchForm((f) => ({ ...f, city: val }))} required />
+              <AdminMiniInput placeholder="City Name" value={launchForm.city} onChange={(val) => setLaunchForm((f) => ({ ...f, city: val }))} required isNight={isNight} />
               <select
                 value={launchForm.brand}
                 onChange={(e) => setLaunchForm((f) => ({ ...f, brand: e.target.value }))}
-                className="rounded-2xl border border-slate-800 bg-slate-950 px-3 py-3 text-xs font-bold text-white outline-none focus:border-amber-500"
+                className={`rounded-2xl border px-3 py-3 text-xs font-bold outline-none ${
+                  isNight ? "border-slate-800 bg-slate-950 text-white focus:border-amber-500" : "border-amber-200 bg-amber-50/50 text-slate-900 focus:border-amber-600 shadow-sm"
+                }`}
               >
                 {["Family Cafe King", "Chai Cafe King", "Paan King", "Shake & Soda King", "Lassi King", "Multi-Brand Flagship"].map((b) => <option key={b}>{b}</option>)}
               </select>
-              <AdminMiniInput placeholder="Opening Nov 2026" value={launchForm.date_text} onChange={(val) => setLaunchForm((f) => ({ ...f, date_text: val }))} required />
-              <AdminMiniInput placeholder="Image URL" value={launchForm.image_data} onChange={(val) => setLaunchForm((f) => ({ ...f, image_data: val }))} required />
-              <AdminMiniInput placeholder="Tag Badge" value={launchForm.tag} onChange={(val) => setLaunchForm((f) => ({ ...f, tag: val }))} required />
+              <AdminMiniInput placeholder="Opening Nov 2026" value={launchForm.date_text} onChange={(val) => setLaunchForm((f) => ({ ...f, date_text: val }))} required isNight={isNight} />
+              <AdminMiniInput placeholder="Image URL" value={launchForm.image_data} onChange={(val) => setLaunchForm((f) => ({ ...f, image_data: val }))} required isNight={isNight} />
+              <AdminMiniInput placeholder="Tag Badge" value={launchForm.tag} onChange={(val) => setLaunchForm((f) => ({ ...f, tag: val }))} required isNight={isNight} />
               <input
                 type="color"
                 value={launchForm.accent}
                 onChange={(e) => setLaunchForm((f) => ({ ...f, accent: e.target.value }))}
-                className="h-[44px] w-full rounded-2xl border border-slate-800 bg-slate-950 p-1 cursor-pointer"
+                className={`h-[44px] w-full rounded-2xl border p-1 cursor-pointer ${
+                  isNight ? "border-slate-800 bg-slate-950" : "border-amber-200 bg-white"
+                }`}
                 title="Accent color"
               />
-              <button className="inline-flex items-center justify-center gap-2 rounded-2xl bg-amber-500 px-5 py-3 text-xs font-extrabold text-black hover:bg-amber-400">
+              <button className="inline-flex items-center justify-center gap-2 rounded-2xl bg-amber-500 px-5 py-3 text-xs font-black text-black hover:bg-amber-400 shadow-md">
                 <Plus size={15} /> Add
               </button>
             </form>
@@ -687,57 +945,287 @@ export function AdminPortal() {
             {/* Cards Grid */}
             <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {launches.map((launch) => (
-                <article key={launch.id} className="overflow-hidden rounded-3xl border border-slate-800 bg-slate-950">
+                <article key={launch.id} className={`overflow-hidden rounded-3xl border ${
+                  isNight ? "border-slate-800 bg-slate-950" : "border-amber-200/80 bg-white shadow-md shadow-amber-950/5"
+                }`}>
                   <img src={launch.image_data} alt={launch.city} className="h-44 w-full object-cover" />
                   <div className="p-4">
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <span className="inline-block rounded-full bg-amber-500/10 px-2.5 py-0.5 text-[10px] font-extrabold text-amber-400 border border-amber-500/30">
+                        <span className="inline-block rounded-full bg-amber-500/10 px-2.5 py-0.5 text-[10px] font-extrabold text-amber-500 border border-amber-500/30">
                           {launch.tag}
                         </span>
-                        <h3 className="font-display text-lg font-extrabold text-white mt-1">{launch.brand}</h3>
-                        <p className="text-xs font-bold text-slate-300">{launch.city} · {launch.date_text}</p>
+                        <h3 className={`font-display text-lg font-extrabold mt-1 ${isNight ? "text-white" : "text-slate-900"}`}>{launch.brand}</h3>
+                        <p className={`text-xs font-bold ${isNight ? "text-slate-300" : "text-amber-900/80"}`}>{launch.city} · {launch.date_text}</p>
                       </div>
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={() => setEditingLaunch(launch)}
+                          className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-2 text-amber-500 hover:bg-amber-500/20"
+                          title="Edit Launch"
+                        >
+                          <Edit3 size={15} />
+                        </button>
+                        <button
+                          onClick={() => void removeLaunch(launch.id)}
+                          className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-2 text-rose-500 hover:bg-rose-500/20"
+                          title="Delete Launch"
+                        >
+                          <Trash2 size={15} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+
+            {/* Launch Edit Modal */}
+            {editingLaunch && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+                <div className={`w-full max-w-lg rounded-3xl border p-6 shadow-2xl ${
+                  isNight ? "border-slate-800 bg-slate-900 text-white" : "border-amber-200 bg-white text-slate-900"
+                }`}>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="font-display text-lg font-bold">Edit Upcoming Launch</h3>
+                    <button onClick={() => setEditingLaunch(null)} className="text-slate-400 hover:text-white">
+                      <XCircle size={20} />
+                    </button>
+                  </div>
+                  <form onSubmit={saveEditLaunch} className="space-y-3">
+                    <AdminMiniInput placeholder="City Name" value={editingLaunch.city} onChange={(val) => setEditingLaunch({ ...editingLaunch, city: val })} required isNight={isNight} />
+                    <select
+                      value={editingLaunch.brand}
+                      onChange={(e) => setEditingLaunch({ ...editingLaunch, brand: e.target.value })}
+                      className={`w-full rounded-2xl border px-3 py-3 text-xs font-bold outline-none ${
+                        isNight ? "border-slate-800 bg-slate-950 text-white focus:border-amber-500" : "border-amber-200 bg-amber-50/50 text-slate-900 focus:border-amber-600 shadow-sm"
+                      }`}
+                    >
+                      {["Family Cafe King", "Chai Cafe King", "Paan King", "Shake & Soda King", "Lassi King", "Multi-Brand Flagship"].map((b) => <option key={b}>{b}</option>)}
+                    </select>
+                    <AdminMiniInput placeholder="Opening Nov 2026" value={editingLaunch.date_text} onChange={(val) => setEditingLaunch({ ...editingLaunch, date_text: val })} required isNight={isNight} />
+                    <AdminMiniInput placeholder="Image URL" value={editingLaunch.image_data} onChange={(val) => setEditingLaunch({ ...editingLaunch, image_data: val })} required isNight={isNight} />
+                    <AdminMiniInput placeholder="Tag Badge" value={editingLaunch.tag} onChange={(val) => setEditingLaunch({ ...editingLaunch, tag: val })} required isNight={isNight} />
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs font-bold">Accent Color:</span>
+                      <input
+                        type="color"
+                        value={editingLaunch.accent}
+                        onChange={(e) => setEditingLaunch({ ...editingLaunch, accent: e.target.value })}
+                        className="h-10 w-20 rounded-xl border p-1 cursor-pointer"
+                      />
+                    </div>
+                    <div className="mt-4 flex items-center justify-end gap-2">
                       <button
-                        onClick={() => void removeLaunch(launch.id)}
-                        className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-2 text-rose-400 hover:bg-rose-500/20"
+                        type="button"
+                        onClick={() => setEditingLaunch(null)}
+                        className={`rounded-xl border px-4 py-2 text-xs font-bold ${isNight ? "border-slate-700 bg-slate-800" : "border-slate-300 bg-slate-100"}`}
                       >
-                        <Trash2 size={15} />
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        className="inline-flex items-center gap-1.5 rounded-xl bg-amber-500 px-5 py-2 text-xs font-black text-black hover:bg-amber-400"
+                      >
+                        <Save size={14} /> Save Launch
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* HERO SLIDER TAB */}
+        {activeTab === "slides" && (
+          <div className={`rounded-3xl border p-6 backdrop-blur-xl ${
+            isNight ? "border-slate-800 bg-slate-900/60" : "border-amber-200/80 bg-white/90 shadow-xl shadow-amber-950/5"
+          }`}>
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <h2 className={`font-display text-xl font-black ${isNight ? "text-white" : "text-slate-900"}`}>Hero Section & Slider Configuration</h2>
+                <p className={`text-xs font-medium ${isNight ? "text-slate-400" : "text-amber-900/70"}`}>
+                  Configure hero headlines, brand highlights, background images, investment prices, & CTAs rendered live in frontend Hero section.
+                </p>
+              </div>
+            </div>
+
+            {/* Add Slide Form */}
+            <form onSubmit={addSlide} className="mt-6 space-y-4 rounded-3xl border p-5 bg-amber-500/5 border-amber-500/20">
+              <h3 className={`font-display text-sm font-extrabold uppercase tracking-wider text-amber-500`}>Add New Hero Slide</h3>
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                <AdminMiniInput placeholder="Hero Title Headline" value={slideForm.title} onChange={(val) => setSlideForm((f) => ({ ...f, title: val }))} required isNight={isNight} />
+                <AdminMiniInput placeholder="Brand Name (e.g. Family Cafe King)" value={slideForm.brand_name} onChange={(val) => setSlideForm((f) => ({ ...f, brand_name: val }))} required isNight={isNight} />
+                <AdminMiniInput placeholder="Tag Badge (e.g. 350+ Franchises)" value={slideForm.badge_text} onChange={(val) => setSlideForm((f) => ({ ...f, badge_text: val }))} isNight={isNight} />
+                <AdminMiniInput placeholder="Investment (e.g. ₹5 - 15 Lakhs)" value={slideForm.price_display} onChange={(val) => setSlideForm((f) => ({ ...f, price_display: val }))} isNight={isNight} />
+                <AdminMiniInput placeholder="Space Req (e.g. 150 - 500 sq.ft)" value={slideForm.space_req} onChange={(val) => setSlideForm((f) => ({ ...f, space_req: val }))} isNight={isNight} />
+                <AdminMiniInput placeholder="CTA Text (e.g. Apply for Franchise)" value={slideForm.cta_text} onChange={(val) => setSlideForm((f) => ({ ...f, cta_text: val }))} isNight={isNight} />
+                <AdminMiniInput placeholder="CTA Link (e.g. #lead)" value={slideForm.cta_link} onChange={(val) => setSlideForm((f) => ({ ...f, cta_link: val }))} isNight={isNight} />
+                <AdminMiniInput placeholder="Image URL" value={slideForm.image_url} onChange={(val) => setSlideForm((f) => ({ ...f, image_url: val }))} isNight={isNight} />
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold">Accent:</span>
+                  <input
+                    type="color"
+                    value={slideForm.accent_color}
+                    onChange={(e) => setSlideForm((f) => ({ ...f, accent_color: e.target.value }))}
+                    className="h-10 w-full rounded-2xl border p-1 cursor-pointer"
+                  />
+                </div>
+              </div>
+              <AdminMiniInput placeholder="Subtitle / Short Description" value={slideForm.subtitle} onChange={(val) => setSlideForm((f) => ({ ...f, subtitle: val }))} isNight={isNight} />
+              <div className="flex justify-end">
+                <button className="inline-flex items-center gap-2 rounded-2xl bg-amber-500 px-6 py-3 text-xs font-black text-black hover:bg-amber-400 shadow-md">
+                  <Plus size={15} /> Add Hero Slide
+                </button>
+              </div>
+            </form>
+
+            {/* Slides Cards List */}
+            <div className="mt-6 space-y-4">
+              {slides.map((slide, idx) => (
+                <article key={slide.id} className={`rounded-3xl border p-5 transition-all ${
+                  isNight ? "border-slate-800 bg-slate-950" : "border-amber-200/80 bg-white shadow-md shadow-amber-950/5"
+                }`}>
+                  <div className="flex flex-wrap items-start justify-between gap-4">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="rounded-full bg-amber-500/20 px-2.5 py-0.5 text-[10px] font-black text-amber-500">
+                          Slide #{idx + 1}
+                        </span>
+                        <span className={`rounded-full border px-2.5 py-0.5 text-[10px] font-extrabold ${slide.is_active !== false ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" : "bg-slate-500/20 text-slate-400 border-slate-500/30"}`}>
+                          {slide.is_active !== false ? "Active in Frontend" : "Hidden"}
+                        </span>
+                      </div>
+                      <h3 className={`font-display text-lg font-black ${isNight ? "text-white" : "text-slate-900"}`}>{slide.title}</h3>
+                      <p className="text-xs font-bold text-amber-500">Brand: {slide.brand_name} · Investment: {slide.price_display} · Space: {slide.space_req}</p>
+                      <p className={`text-xs ${isNight ? "text-slate-400" : "text-amber-900/70"}`}>{slide.subtitle}</p>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        onClick={() => void toggleSlideActive(slide)}
+                        className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-bold ${
+                          slide.is_active !== false ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" : "bg-slate-800 text-slate-400 border-slate-700"
+                        }`}
+                      >
+                        {slide.is_active !== false ? <Eye size={14} /> : <EyeOff size={14} />} {slide.is_active !== false ? "Active" : "Hidden"}
+                      </button>
+                      <button
+                        onClick={() => setEditingSlide(slide)}
+                        className="inline-flex items-center gap-1.5 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-1.5 text-xs font-bold text-amber-500 hover:bg-amber-500/20"
+                      >
+                        <Edit3 size={14} /> Edit Slide
+                      </button>
+                      <button
+                        onClick={() => void removeSlide(slide.id)}
+                        className="inline-flex items-center gap-1.5 rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-1.5 text-xs font-bold text-rose-500 hover:bg-rose-600/30"
+                      >
+                        <Trash2 size={14} /> Delete
                       </button>
                     </div>
                   </div>
                 </article>
               ))}
             </div>
+
+            {/* Slide Edit Modal */}
+            {editingSlide && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+                <div className={`w-full max-w-xl rounded-3xl border p-6 shadow-2xl ${
+                  isNight ? "border-slate-800 bg-slate-900 text-white" : "border-amber-200 bg-white text-slate-900"
+                }`}>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="font-display text-lg font-bold">Edit Hero Slide</h3>
+                    <button onClick={() => setEditingSlide(null)} className="text-slate-400 hover:text-white">
+                      <XCircle size={20} />
+                    </button>
+                  </div>
+                  <form onSubmit={saveEditSlide} className="space-y-3">
+                    <AdminMiniInput placeholder="Hero Title Headline" value={editingSlide.title} onChange={(val) => setEditingSlide({ ...editingSlide, title: val })} required isNight={isNight} />
+                    <AdminMiniInput placeholder="Brand Name" value={editingSlide.brand_name} onChange={(val) => setEditingSlide({ ...editingSlide, brand_name: val })} required isNight={isNight} />
+                    <AdminMiniInput placeholder="Subtitle Description" value={editingSlide.subtitle} onChange={(val) => setEditingSlide({ ...editingSlide, subtitle: val })} isNight={isNight} />
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <AdminMiniInput placeholder="Badge Text" value={editingSlide.badge_text} onChange={(val) => setEditingSlide({ ...editingSlide, badge_text: val })} isNight={isNight} />
+                      <AdminMiniInput placeholder="Investment" value={editingSlide.price_display} onChange={(val) => setEditingSlide({ ...editingSlide, price_display: val })} isNight={isNight} />
+                      <AdminMiniInput placeholder="Space Req" value={editingSlide.space_req} onChange={(val) => setEditingSlide({ ...editingSlide, space_req: val })} isNight={isNight} />
+                      <AdminMiniInput placeholder="CTA Text" value={editingSlide.cta_text} onChange={(val) => setEditingSlide({ ...editingSlide, cta_text: val })} isNight={isNight} />
+                    </div>
+                    <AdminMiniInput placeholder="Image URL" value={editingSlide.image_url} onChange={(val) => setEditingSlide({ ...editingSlide, image_url: val })} isNight={isNight} />
+                    <div className="flex items-center justify-between">
+                      <label className="flex items-center gap-2 text-xs font-bold cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={editingSlide.is_active}
+                          onChange={(e) => setEditingSlide({ ...editingSlide, is_active: e.target.checked })}
+                          className="h-4 w-4 rounded accent-amber-500"
+                        />
+                        Active in Hero Slider
+                      </label>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold">Accent:</span>
+                        <input
+                          type="color"
+                          value={editingSlide.accent_color}
+                          onChange={(e) => setEditingSlide({ ...editingSlide, accent_color: e.target.value })}
+                          className="h-9 w-16 rounded-xl border p-1 cursor-pointer"
+                        />
+                      </div>
+                    </div>
+                    <div className="mt-5 flex items-center justify-end gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setEditingSlide(null)}
+                        className={`rounded-xl border px-4 py-2 text-xs font-bold ${isNight ? "border-slate-700 bg-slate-800" : "border-slate-300 bg-slate-100"}`}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        className="inline-flex items-center gap-1.5 rounded-xl bg-amber-500 px-5 py-2 text-xs font-black text-black hover:bg-amber-400"
+                      >
+                        <Save size={14} /> Save Hero Slide
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
         {/* BOOKINGS TAB */}
         {activeTab === "bookings" && (
-          <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-6 backdrop-blur-xl">
-            <h2 className="font-display text-xl font-black text-white">Customer Table / Event Bookings</h2>
-            <p className="text-xs font-medium text-slate-400 mb-6">Reservations and cafe table bookings received from customers.</p>
+          <div className={`rounded-3xl border p-6 backdrop-blur-xl ${
+            isNight ? "border-slate-800 bg-slate-900/60" : "border-amber-200/80 bg-white/90 shadow-xl shadow-amber-950/5"
+          }`}>
+            <h2 className={`font-display text-xl font-black ${isNight ? "text-white" : "text-slate-900"}`}>Customer Table / Event Bookings</h2>
+            <p className={`text-xs font-medium mb-6 ${isNight ? "text-slate-400" : "text-amber-900/70"}`}>Reservations and cafe table bookings received from customers.</p>
 
             <div className="space-y-3">
               {bookings.length === 0 && (
-                <div className="rounded-2xl border border-dashed border-slate-800 bg-slate-950 px-5 py-12 text-center">
-                  <Calendar size={28} className="mx-auto text-slate-500 mb-2" />
-                  <p className="text-sm font-bold text-slate-400">No customer bookings submitted yet.</p>
+                <div className={`rounded-2xl border border-dashed px-5 py-12 text-center ${
+                  isNight ? "border-slate-800 bg-slate-950" : "border-amber-200 bg-amber-50/40"
+                }`}>
+                  <Calendar size={28} className="mx-auto text-amber-500 mb-2" />
+                  <p className={`text-sm font-bold ${isNight ? "text-slate-400" : "text-amber-900/70"}`}>No customer bookings submitted yet.</p>
                 </div>
               )}
 
               {bookings.map((b) => (
-                <div key={b._id || b.id} className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-800 bg-slate-950 p-4">
+                <div key={b._id || b.id} className={`flex flex-wrap items-center justify-between gap-4 rounded-2xl border p-4 ${
+                  isNight ? "border-slate-800 bg-slate-950" : "border-amber-200/80 bg-white shadow-sm"
+                }`}>
                   <div>
-                    <h3 className="font-bold text-white">{b.name} <span className="text-xs text-amber-400">({b.phone})</span></h3>
-                    <p className="text-xs text-slate-400">
+                    <h3 className={`font-bold ${isNight ? "text-white" : "text-slate-900"}`}>{b.name} <span className="text-xs text-amber-500">({b.phone})</span></h3>
+                    <p className={`text-xs ${isNight ? "text-slate-400" : "text-amber-900/70"}`}>
                       Date: {b.date || "N/A"} · Time: {b.time || "N/A"} · Guests: {b.guests || 2} · Brand: {b.brand || "Family Cafe King"}
                     </p>
-                    {b.notes && <p className="mt-1 text-xs italic text-slate-400">"{b.notes}"</p>}
+                    {b.notes && <p className="mt-1 text-xs italic text-amber-500">"{b.notes}"</p>}
                   </div>
                   <button
                     onClick={() => void removeBooking((b._id || b.id)!)}
-                    className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-1.5 text-xs font-bold text-rose-300 hover:bg-rose-500/20"
+                    className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-1.5 text-xs font-bold text-rose-500 hover:bg-rose-500/20"
                   >
                     Delete
                   </button>
@@ -749,28 +1237,36 @@ export function AdminPortal() {
 
         {/* CONTACT INQUIRIES TAB */}
         {activeTab === "contacts" && (
-          <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-6 backdrop-blur-xl">
-            <h2 className="font-display text-xl font-black text-white">Direct Contact Inquiries</h2>
-            <p className="text-xs font-medium text-slate-400 mb-6">Messages submitted through the contact form on customer site.</p>
+          <div className={`rounded-3xl border p-6 backdrop-blur-xl ${
+            isNight ? "border-slate-800 bg-slate-900/60" : "border-amber-200/80 bg-white/90 shadow-xl shadow-amber-950/5"
+          }`}>
+            <h2 className={`font-display text-xl font-black ${isNight ? "text-white" : "text-slate-900"}`}>Direct Contact Inquiries</h2>
+            <p className={`text-xs font-medium mb-6 ${isNight ? "text-slate-400" : "text-amber-900/70"}`}>Messages submitted through the contact form on customer site.</p>
 
             <div className="space-y-3">
               {contacts.length === 0 && (
-                <div className="rounded-2xl border border-dashed border-slate-800 bg-slate-950 px-5 py-12 text-center">
-                  <Mail size={28} className="mx-auto text-slate-500 mb-2" />
-                  <p className="text-sm font-bold text-slate-400">No contact messages received yet.</p>
+                <div className={`rounded-2xl border border-dashed px-5 py-12 text-center ${
+                  isNight ? "border-slate-800 bg-slate-950" : "border-amber-200 bg-amber-50/40"
+                }`}>
+                  <Mail size={28} className="mx-auto text-amber-500 mb-2" />
+                  <p className={`text-sm font-bold ${isNight ? "text-slate-400" : "text-amber-900/70"}`}>No contact messages received yet.</p>
                 </div>
               )}
 
               {contacts.map((c) => (
-                <div key={c._id || c.id} className="flex flex-wrap items-start justify-between gap-4 rounded-2xl border border-slate-800 bg-slate-950 p-4">
+                <div key={c._id || c.id} className={`flex flex-wrap items-start justify-between gap-4 rounded-2xl border p-4 ${
+                  isNight ? "border-slate-800 bg-slate-950" : "border-amber-200/80 bg-white shadow-sm"
+                }`}>
                   <div>
-                    <h3 className="font-bold text-white">{c.name} <span className="text-xs text-amber-400">({c.phone} · {c.email || "No Email"})</span></h3>
-                    {c.subject && <p className="text-xs font-semibold text-slate-300 mt-1">Subject: {c.subject}</p>}
-                    <p className="mt-2 text-xs text-slate-300 bg-slate-900 p-3 rounded-xl border border-slate-800">"{c.message}"</p>
+                    <h3 className={`font-bold ${isNight ? "text-white" : "text-slate-900"}`}>{c.name} <span className="text-xs text-amber-500">({c.phone} · {c.email || "No Email"})</span></h3>
+                    {c.subject && <p className={`text-xs font-semibold mt-1 ${isNight ? "text-slate-300" : "text-amber-900/80"}`}>Subject: {c.subject}</p>}
+                    <p className={`mt-2 text-xs p-3 rounded-xl border ${
+                      isNight ? "text-slate-300 bg-slate-900 border-slate-800" : "text-slate-800 bg-amber-50/50 border-amber-200/70"
+                    }`}>"{c.message}"</p>
                   </div>
                   <button
                     onClick={() => void removeContact((c._id || c.id)!)}
-                    className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-1.5 text-xs font-bold text-rose-300 hover:bg-rose-500/20"
+                    className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-1.5 text-xs font-bold text-rose-500 hover:bg-rose-500/20"
                   >
                     Delete
                   </button>
@@ -790,29 +1286,39 @@ function AdminStat({
   value,
   badge,
   highlight,
+  isNight = true,
 }: {
   icon: React.ReactNode;
   label: string;
   value: number;
   badge?: string;
   highlight?: boolean;
+  isNight?: boolean;
 }) {
   return (
     <div className={`rounded-3xl border p-5 backdrop-blur-xl transition-all ${
-      highlight ? "border-amber-500/40 bg-gradient-to-br from-amber-500/10 via-slate-900 to-slate-950" : "border-slate-800 bg-slate-900/60"
+      highlight
+        ? isNight
+          ? "border-amber-500/40 bg-gradient-to-br from-amber-500/10 via-slate-900 to-slate-950 text-white"
+          : "border-amber-400 bg-gradient-to-br from-amber-100 via-orange-50 to-white text-slate-900 shadow-lg shadow-amber-500/10"
+        : isNight
+          ? "border-slate-800 bg-slate-900/60 text-white"
+          : "border-amber-200/80 bg-white/90 text-slate-900 shadow-md shadow-amber-950/5"
     }`}>
       <div className="flex items-center justify-between">
         <span className="grid h-10 w-10 place-items-center rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-600 text-black font-bold">
           {icon}
         </span>
         {badge && (
-          <span className="rounded-full bg-slate-800 px-2.5 py-0.5 text-[10px] font-extrabold uppercase text-slate-400">
+          <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-extrabold uppercase ${
+            isNight ? "bg-slate-800 text-slate-400" : "bg-amber-100 text-amber-900"
+          }`}>
             {badge}
           </span>
         )}
       </div>
-      <p className="mt-4 font-display text-3xl font-black text-white">{value}</p>
-      <p className="text-xs font-bold text-slate-400 mt-1">{label}</p>
+      <p className={`mt-4 font-display text-3xl font-black ${isNight ? "text-white" : "text-slate-900"}`}>{value}</p>
+      <p className={`text-xs font-bold mt-1 ${isNight ? "text-slate-400" : "text-amber-900/70"}`}>{label}</p>
     </div>
   );
 }
@@ -824,6 +1330,7 @@ function AdminField({
   type = "text",
   required,
   placeholder,
+  isNight = true,
 }: {
   label: string;
   value: string;
@@ -831,17 +1338,22 @@ function AdminField({
   type?: string;
   required?: boolean;
   placeholder?: string;
+  isNight?: boolean;
 }) {
   return (
     <label className="block">
-      <span className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-300">{label}</span>
+      <span className={`mb-1.5 block text-xs font-bold uppercase tracking-wider ${isNight ? "text-slate-300" : "text-amber-950"}`}>{label}</span>
       <input
         type={type}
         value={value}
         required={required}
         placeholder={placeholder}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-2xl border border-slate-800 bg-slate-950 px-4 py-3 text-xs font-bold text-white outline-none focus:border-amber-500"
+        className={`w-full rounded-2xl border px-4 py-3 text-xs font-bold outline-none transition-all ${
+          isNight
+            ? "border-slate-800 bg-slate-950 text-white focus:border-amber-500"
+            : "border-amber-200/90 bg-white text-slate-900 focus:border-amber-600 shadow-sm"
+        }`}
       />
     </label>
   );
@@ -852,11 +1364,13 @@ function AdminMiniInput({
   onChange,
   placeholder,
   required,
+  isNight = true,
 }: {
   value: string;
   onChange: (val: string) => void;
   placeholder: string;
   required?: boolean;
+  isNight?: boolean;
 }) {
   return (
     <input
@@ -864,7 +1378,11 @@ function AdminMiniInput({
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
       required={required}
-      className="w-full rounded-2xl border border-slate-800 bg-slate-950 px-3 py-3 text-xs font-bold text-white outline-none focus:border-amber-500"
+      className={`w-full rounded-2xl border px-3 py-3 text-xs font-bold outline-none transition-all ${
+        isNight
+          ? "border-slate-800 bg-slate-950 text-white focus:border-amber-500"
+          : "border-amber-200/90 bg-white text-slate-900 focus:border-amber-600 shadow-sm"
+      }`}
     />
   );
 }
