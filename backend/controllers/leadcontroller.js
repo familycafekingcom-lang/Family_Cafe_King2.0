@@ -15,20 +15,21 @@ exports.createLead = async (req, res) => {
       source_page,
     } = req.body;
 
-    if (!name || !phone || !city || !brand || !budget) {
+    if (!name || !phone) {
       return res.status(400).json({
         success: false,
-        message: "Please fill all required fields",
+        message: "Name and Phone number are required",
       });
     }
 
     const lead = await Lead.create({
       name,
       phone,
-      email,
-      city,
-      brand,
-      budget,
+      email: email || "",
+      city: city || "N/A",
+      brand: brand || "Family Cafe King",
+      budget: budget || req.body.investmentRange || "Standard",
+      notes: req.body.notes || req.body.message || "",
       source_page: source_page || "Website",
     });
 

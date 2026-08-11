@@ -23,28 +23,20 @@ const leadSchema = new mongoose.Schema(
 
     city: {
       type: String,
-      required: [true, "City is required"],
+      default: "N/A",
       trim: true,
     },
 
     brand: {
       type: String,
-      required: [true, "Brand is required"],
-      enum: [
-        "Family Cafe King",
-        "Chai Cafe King",
-        "Paan King",
-        "Shake & Soda King",
-        "Lassi King",
-        "Multi-Brand Flagship",
-      ],
+      default: "Family Cafe King",
     },
 
-   budget: {
-  type: String,
-  required: [true, "Budget is required"],
-  trim: true,
-},
+    budget: {
+      type: String,
+      default: "Standard",
+      trim: true,
+    },
 
     status: {
       type: String,

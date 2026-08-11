@@ -1366,7 +1366,7 @@ function LeadCTA({ initialBrand }: { initialBrand?: string }) {
                       <ArrowRight size={18} className="transition-transform group-hover:translate-x-1" />
                     </button>
                     <p className="text-center text-[12px] font-bold text-slate-600">
-                      🔒 Lead storage: {DATABASE_MODE === "supabase" ? "Live Supabase PostgreSQL" : "local demo database fallback"}
+                      🔒 Lead storage: {DATABASE_MODE === "mern" ? "Live MERN & MongoDB Atlas Database" : "local demo database fallback"}
                     </p>
                   </form>
                 </>
