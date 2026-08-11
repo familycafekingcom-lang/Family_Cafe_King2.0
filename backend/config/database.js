@@ -4,18 +4,19 @@ const connectDB = async () => {
   const mongoUri = process.env.MONGODB_URI;
 
   if (mongoUri && typeof mongoUri === "string" && mongoUri.trim().length > 0) {
-    const MAX_RETRIES = 2;
+    console.log(`📡 Connecting to MongoDB Atlas: ${mongoUri.replace(/:([^@]+)@/, ":****@")}`);
+    const MAX_RETRIES = 3;
     for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
       try {
         const conn = await mongoose.connect(mongoUri, {
-          serverSelectionTimeoutMS: 4000,
+          serverSelectionTimeoutMS: 15000,
         });
-        console.log(`✅ MongoDB Atlas Connected: ${conn.connection.host}`);
+        console.log(`✅ MongoDB Atlas Connected Successfully: ${conn.connection.host}`);
         return;
       } catch (err) {
         console.warn(`⚠️ Atlas attempt ${attempt}/${MAX_RETRIES} failed: ${err.message}`);
         if (attempt < MAX_RETRIES) {
-          await new Promise((r) => setTimeout(r, 1000));
+          await new Promise((r) => setTimeout(r, 1500));
         }
       }
     }

@@ -19,8 +19,8 @@ const generateToken = (admin) => {
 const seedDefaultAdmin = async () => {
   if (mongoose.connection.readyState !== 1) return;
   try {
-    const primaryEmail = (process.env.ADMIN_EMAIL || "shivamsri.srivastava2@gmail.com").toLowerCase().trim();
-    const primaryPass = process.env.ADMIN_PASSWORD || "Shivam@1234";
+    const primaryEmail = (process.env.ADMIN_EMAIL || "familycafeking.com@gmail.com").toLowerCase().trim();
+    const primaryPass = process.env.ADMIN_PASSWORD || "Admin@FCK2026";
 
     const existingPrimary = await Admin.findOne({ email: primaryEmail });
     if (!existingPrimary) {
@@ -60,8 +60,8 @@ exports.loginAdmin = async (req, res) => {
       });
     }
 
-    const defaultEmail = (process.env.ADMIN_EMAIL || "shivamsri.srivastava2@gmail.com").toLowerCase().trim();
-    const defaultPassword = process.env.ADMIN_PASSWORD || "Shivam@1234";
+    const defaultEmail = (process.env.ADMIN_EMAIL || "familycafeking.com@gmail.com").toLowerCase().trim();
+    const defaultPassword = process.env.ADMIN_PASSWORD || "Admin@FCK2026";
     const inputEmail = email.toLowerCase().trim();
 
     // Check if MongoDB is live and connected
@@ -107,7 +107,7 @@ exports.loginAdmin = async (req, res) => {
 
     // Fallback: Validate default admin credentials when DB is connecting, offline, or fallback mode
     const isValidPrimary =
-      (inputEmail === defaultEmail || inputEmail === "shivamsri.srivastava2@gmail.com") &&
+      (inputEmail === defaultEmail || inputEmail === "familycafeking.com@gmail.com") &&
       password === defaultPassword;
     const isValidLegacy =
       (inputEmail === "admin@familycafeking.com" || inputEmail === "admin") &&

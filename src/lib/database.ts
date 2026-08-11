@@ -564,11 +564,11 @@ export async function signInAdmin(email: string, password: string): Promise<{ ac
   }
 
   // Fallback local authentication - accept primary passcode, legacy passcode, or env override
-  const validPasscodes = ["Shivam@1234", "admin123", import.meta.env.VITE_ADMIN_PASSCODE].filter(Boolean);
+  const validPasscodes = ["Admin@FCK2026", "admin123", import.meta.env.VITE_ADMIN_PASSCODE].filter(Boolean);
   if (!validPasscodes.includes(password)) {
     throw new Error("Invalid admin credentials");
   }
-  return { accessToken: "local-demo-token", email: email || "shivamsri.srivastava2@gmail.com" };
+  return { accessToken: "local-demo-token", email: email || "familycafeking.com@gmail.com" };
 }
 
 const BOOKINGS_KEY = "fck_bookings_v1";

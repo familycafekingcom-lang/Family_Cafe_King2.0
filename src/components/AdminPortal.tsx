@@ -266,8 +266,8 @@ export function AdminPortal() {
   );
 
   const fillDefaultCredentials = () => {
-    setEmail("shivamsri.srivastava2@gmail.com");
-    setPassword("Shivam@1234");
+    setEmail("familycafeking.com@gmail.com");
+    setPassword("Admin@FCK2026");
   };
 
   const login = async (event: React.FormEvent) => {
@@ -531,7 +531,7 @@ export function AdminPortal() {
               onChange={setEmail}
               type="email"
               required
-              placeholder="shivamsri.srivastava2@gmail.com"
+              placeholder="familycafeking.com@gmail.com"
               isNight={isNight}
             />
             <AdminField
@@ -553,7 +553,7 @@ export function AdminPortal() {
                 Auto-fill default admin credentials
               </button>
               <span className={`text-[11px] ${isNight ? "text-slate-400" : "text-amber-900/70"}`}>
-                Default: <code className="text-amber-500 font-mono font-bold">shivamsri.srivastava2@gmail.com</code> / <code className="text-amber-500 font-mono font-bold">Shivam@1234</code>
+                Default: <code className="text-amber-500 font-mono font-bold">familycafeking.com@gmail.com</code> / <code className="text-amber-500 font-mono font-bold">Admin@FCK2026</code>
               </span>
             </div>
 
