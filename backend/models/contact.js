@@ -9,18 +9,17 @@ const contactSchema = new mongoose.Schema(
     },
 
     phone: {
-    type: String,
-    required: [true, "Phone number is required"],
-    trim: true,
-    match: [/^[6-9]\d{9}$/, "Enter valid Indian mobile number"]
-},
+      type: String,
+      required: [true, "Phone number is required"],
+      trim: true,
+    },
 
-   email: {
-    type: String,
-    trim: true,
-    lowercase: true,
-    default: ""
-},
+    email: {
+      type: String,
+      trim: true,
+      lowercase: true,
+      default: "",
+    },
 
     subject: {
       type: String,
@@ -28,11 +27,10 @@ const contactSchema = new mongoose.Schema(
       default: "",
     },
 
-   message: {
-    type: String,
-    required: [true, "Message is required"],
-    minlength: 10
-},
+    message: {
+      type: String,
+      required: [true, "Message is required"],
+    },
 
     status: {
       type: String,

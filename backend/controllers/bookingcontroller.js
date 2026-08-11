@@ -1,9 +1,37 @@
-const Booking = require("../models/Booking");
+const Booking = require("../models/booking");
 
 // Create Booking
 exports.createBooking = async (req, res) => {
   try {
-    const booking = await Booking.create(req.body);
+    const {
+      name,
+      customerName,
+      phone,
+      email,
+      city,
+      brand,
+      outlet,
+      date,
+      bookingDate,
+      time,
+      bookingTime,
+      guests,
+      totalPersons,
+      notes,
+      specialRequest,
+    } = req.body;
+
+    const booking = await Booking.create({
+      customerName: customerName || name || "Valued Customer",
+      phone: phone || "",
+      email: email || "",
+      city: city || "India",
+      outlet: outlet || brand || "Family Cafe King",
+      bookingDate: bookingDate || date || new Date(),
+      bookingTime: bookingTime || time || "12:00 PM",
+      totalPersons: Number(totalPersons || guests || 1),
+      specialRequest: specialRequest || notes || "",
+    });
 
     res.status(201).json({
       success: true,

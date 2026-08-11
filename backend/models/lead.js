@@ -12,7 +12,6 @@ const leadSchema = new mongoose.Schema(
       type: String,
       required: [true, "Phone number is required"],
       trim: true,
-      match: [/^[6-9]\d{9}$/, "Enter valid Indian mobile number"],
     },
 
     email: {

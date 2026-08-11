@@ -4,8 +4,8 @@ const bookingSchema = new mongoose.Schema(
   {
     customerName: {
       type: String,
-      required: true,
       trim: true,
+      default: "Valued Customer",
     },
 
     phone: {
@@ -22,29 +22,29 @@ const bookingSchema = new mongoose.Schema(
 
     city: {
       type: String,
-      required: true,
       trim: true,
+      default: "India",
     },
 
     outlet: {
       type: String,
-      required: true,
       trim: true,
+      default: "Family Cafe King",
     },
 
     bookingDate: {
       type: Date,
-      required: true,
+      default: Date.now,
     },
 
     bookingTime: {
       type: String,
-      required: true,
+      default: "12:00 PM",
     },
 
     totalPersons: {
       type: Number,
-      required: true,
+      default: 1,
     },
 
     specialRequest: {
