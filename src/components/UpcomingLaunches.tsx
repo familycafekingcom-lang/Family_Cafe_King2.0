@@ -3,7 +3,11 @@ import { ArrowRight, MapPin, Sparkles } from "lucide-react";
 import { DEFAULT_UPCOMING, listLaunches, type LaunchRecord } from "../lib/database";
 import { Reveal } from "./Reveal";
 
-export function UpcomingLaunches() {
+interface UpcomingLaunchesProps {
+  onOpenCityBooking?: (city?: string, brand?: string) => void;
+}
+
+export function UpcomingLaunches({ onOpenCityBooking }: UpcomingLaunchesProps = {}) {
   const [launches, setLaunches] = useState<LaunchRecord[]>(DEFAULT_UPCOMING);
   const trackRef = useRef<HTMLDivElement | null>(null);
 
@@ -78,7 +82,8 @@ export function UpcomingLaunches() {
           {loop.map((launch, index) => (
             <figure
               key={`${launch.id}-${index}`}
-              className="lift group relative w-[310px] flex-none overflow-hidden rounded-[30px] border border-maroon-900/15 bg-white p-3 shadow-xl sm:w-[350px]"
+              onClick={() => onOpenCityBooking?.(launch.city, launch.brand)}
+              className="lift group relative w-[310px] flex-none cursor-pointer overflow-hidden rounded-[30px] border border-maroon-900/15 bg-white p-3 shadow-xl sm:w-[350px]"
             >
               <div className="relative aspect-[4/3] overflow-hidden rounded-[24px] bg-maroon-950">
                 <img
@@ -111,7 +116,7 @@ export function UpcomingLaunches() {
                   </div>
                   <div className="mt-1 text-[13px] font-semibold text-maroon-800">{launch.date_text}</div>
                 </div>
-                <span className="mt-1 grid h-10 w-10 flex-none place-items-center rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-lg">
+                <span className="mt-1 grid h-10 w-10 flex-none place-items-center rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-lg transition-transform group-hover:scale-110">
                   <ArrowRight size={17} />
                 </span>
               </figcaption>
@@ -122,12 +127,13 @@ export function UpcomingLaunches() {
 
       <div className="mt-10 text-center">
         <Reveal>
-          <a
-            href="#lead"
-            className="shine inline-flex items-center gap-2 rounded-full bg-gradient-to-br from-amber-500 via-orange-600 to-rose-700 px-7 py-4 text-[15px] font-extrabold text-white shadow-xl shadow-orange-500/30 transition hover:-translate-y-0.5"
+          <button
+            type="button"
+            onClick={() => onOpenCityBooking?.()}
+            className="shine inline-flex items-center gap-2 rounded-full bg-gradient-to-br from-amber-500 via-orange-600 to-rose-700 px-7 py-4 text-[15px] font-extrabold text-white shadow-xl shadow-orange-500/30 transition hover:-translate-y-0.5 cursor-pointer"
           >
             Book Your City <ArrowRight size={17} />
-          </a>
+          </button>
         </Reveal>
       </div>
     </section>

@@ -86,7 +86,7 @@ export const BRANDS: BrandData[] = [
     long:
       "Family Cafe King is the flagship master franchise concept. Partnering with Family Cafe King gives you full multi-brand rights to operate high-demand chai, paan, shake, lassi, and quick-serve food modules with massive footfall and high daily margins.",
     icon: Store,
-    logo: "https://customer-assets-rejwkqb3.emergentagent.net/job_family-cafe-king/artifacts/2q6zxze6_Gemini_Generated_Image_mxlilsmxlilsmxli.png",
+    logo: "https://customer-assets-m6fa6gv7.emergentagent.net/job_5c36eac6-4afa-404a-9f8a-3a2a73a148f4/artifacts/t8gmidb5_FCK%20LOGO.png",
     foodImage: "/images/family-cafe-king-food.png",
     accentGradient: "from-maroon-700 via-rose-800 to-amber-600",
     chipBg: "bg-rose-100",

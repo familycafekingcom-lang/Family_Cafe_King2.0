@@ -32,12 +32,16 @@ import {
   XCircle,
 } from "lucide-react";
 import {
+  allRequestsToCsv,
   DEFAULT_SLIDES,
   DEFAULT_UPCOMING,
+  deleteBookingRecord,
   deleteLaunch,
   deleteLead,
   deleteSlide,
+  getVisitorStats,
   leadsToCsv,
+  listBookings,
   listLaunches,
   listLeads,
   listSlides,
@@ -47,10 +51,12 @@ import {
   updateLaunch,
   updateLead,
   updateSlide,
+  type BookingRecord,
   type LaunchRecord,
   type LeadRecord,
   type LeadStatus,
   type SlideRecord,
+  type VisitorStats,
 } from "../lib/database";
 import {
   apiDeleteBooking,
@@ -126,6 +132,8 @@ export function AdminPortal() {
   const [activeTab, setActiveTab] = useState<"overview" | "leads" | "launches" | "slides" | "bookings" | "contacts">("overview");
   const [isMernOnline, setIsMernOnline] = useState<boolean | null>(null);
 
+  const [visitorStats, setVisitorStats] = useState<VisitorStats>(() => getVisitorStats());
+
   const [leads, setLeads] = useState<LeadRecord[]>([]);
   const [launches, setLaunches] = useState<LaunchRecord[]>([]);
   const [slides, setSlides] = useState<SlideRecord[]>([]);
@@ -176,6 +184,7 @@ export function AdminPortal() {
     setDataLoading(true);
     setDataError("");
     try {
+      setVisitorStats(getVisitorStats());
       await checkHealth();
       const [leadRows, launchRows, slideRows] = await Promise.all([
         listLeads(session.accessToken),
@@ -188,10 +197,10 @@ export function AdminPortal() {
 
       try {
         const [bookingRows, contactRows] = await Promise.all([
-          apiGetBookings(session.accessToken),
+          listBookings(session.accessToken),
           apiGetContacts(session.accessToken),
         ]);
-        setBookings(bookingRows);
+        setBookings(bookingRows as MernBooking[]);
         setContacts(contactRows);
       } catch {
         // Non-fatal if bookings/contacts endpoints are empty
@@ -209,6 +218,15 @@ export function AdminPortal() {
 
   useEffect(() => {
     void loadData();
+
+    const handleUpdate = () => void loadData();
+    window.addEventListener("fck_bookings_updated", handleUpdate);
+    window.addEventListener("storage", handleUpdate);
+
+    return () => {
+      window.removeEventListener("fck_bookings_updated", handleUpdate);
+      window.removeEventListener("storage", handleUpdate);
+    };
   }, [loadData]);
 
   const filteredLeads = useMemo(() => {
@@ -293,7 +311,7 @@ export function AdminPortal() {
   const removeBooking = async (id: string) => {
     if (!session || !window.confirm("Delete this booking entry?")) return;
     try {
-      await apiDeleteBooking(id, session.accessToken);
+      await deleteBookingRecord(id, session.accessToken);
       setBookings((current) => current.filter((b) => (b._id || b.id) !== id));
     } catch (err) {
       alert(err instanceof Error ? err.message : "Could not delete booking");
@@ -433,11 +451,12 @@ export function AdminPortal() {
   };
 
   const downloadCsv = () => {
-    const blob = new Blob([leadsToCsv(filteredLeads)], { type: "text/csv;charset=utf-8" });
+    const csvData = allRequestsToCsv(leads, bookings, contacts);
+    const blob = new Blob([csvData], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `family-cafe-king-leads-${new Date().toISOString().slice(0, 10)}.csv`;
+    link.download = `family-cafe-king-real-leads-${new Date().toISOString().slice(0, 10)}.csv`;
     link.click();
     URL.revokeObjectURL(url);
   };
@@ -477,8 +496,12 @@ export function AdminPortal() {
           </div>
 
           <div className="flex items-center gap-4">
-            <span className="grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-tr from-amber-600 via-orange-600 to-rose-700 text-white shadow-lg shadow-amber-900/40">
-              <ShieldCheck size={28} />
+            <span className="relative grid h-14 w-14 flex-shrink-0 place-items-center overflow-hidden rounded-2xl border border-amber-400/30 bg-white p-1.5 shadow-lg shadow-amber-900/20">
+              <img
+                src="https://customer-assets-m6fa6gv7.emergentagent.net/job_5c36eac6-4afa-404a-9f8a-3a2a73a148f4/artifacts/t8gmidb5_FCK%20LOGO.png"
+                alt="Family Cafe King Logo"
+                className="h-full w-full object-contain rounded-xl"
+              />
             </span>
             <div>
               <h1 className={`font-display text-2xl font-black tracking-tight ${isNight ? "text-white" : "text-slate-900"}`}>
@@ -566,8 +589,12 @@ export function AdminPortal() {
       }`}>
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-6 py-4">
           <div className="flex items-center gap-3.5">
-            <span className="grid h-11 w-11 place-items-center rounded-2xl bg-gradient-to-tr from-amber-500 via-orange-600 to-rose-700 text-white shadow-md">
-              <Crown size={22} />
+            <span className="relative grid h-11 w-11 flex-shrink-0 place-items-center overflow-hidden rounded-2xl border border-amber-400/30 bg-white p-1 shadow-md">
+              <img
+                src="https://customer-assets-m6fa6gv7.emergentagent.net/job_5c36eac6-4afa-404a-9f8a-3a2a73a148f4/artifacts/t8gmidb5_FCK%20LOGO.png"
+                alt="Family Cafe King Logo"
+                className="h-full w-full object-contain rounded-xl"
+              />
             </span>
             <div>
               <div className="flex items-center gap-2">
@@ -667,10 +694,49 @@ export function AdminPortal() {
           <div className="space-y-8">
             {/* KPI Grid */}
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <AdminStat icon={<Eye size={22} />} label="Total Real Site Visitors" value={visitorStats.totalVisits} badge={`${visitorStats.todayVisits} Today`} highlight isNight={isNight} />
               <AdminStat icon={<Users size={22} />} label="Total Franchise Leads" value={stats.total} badge="Lifetime" isNight={isNight} />
-              <AdminStat icon={<Sparkles size={22} />} label="New Inquiries" value={stats.new} badge="Action Required" highlight isNight={isNight} />
+              <AdminStat icon={<Sparkles size={22} />} label="New Inquiries" value={stats.new} badge="Action Required" isNight={isNight} />
               <AdminStat icon={<CheckCircle2 size={22} />} label="Converted Franchisees" value={stats.converted} badge="Success" isNight={isNight} />
-              <AdminStat icon={<MapPin size={22} />} label="Upcoming City Launches" value={stats.launchesCount} badge="Active" isNight={isNight} />
+            </div>
+
+            {/* Real Visitors Analytics Panel */}
+            <div className={`rounded-3xl border p-6 backdrop-blur-xl transition-all ${
+              isNight ? "border-slate-800 bg-slate-900/60" : "border-amber-200/80 bg-white/90 shadow-xl shadow-amber-950/5"
+            }`}>
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-5">
+                <div>
+                  <h2 className={`font-display text-lg font-bold ${isNight ? "text-white" : "text-slate-900"}`}>
+                    Real-time Website Traffic & Visitor Overview
+                  </h2>
+                  <p className={`text-xs ${isNight ? "text-slate-400" : "text-amber-900/70"}`}>
+                    Live site pageviews, unique visitors, and daily traffic metrics
+                  </p>
+                </div>
+                <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-1 text-xs font-bold text-emerald-400 inline-flex items-center gap-1.5 self-start sm:self-auto">
+                  <span className="h-2.5 w-2.5 rounded-full bg-emerald-400 animate-pulse" /> Live Tracking Active
+                </span>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-3">
+                <div className={`rounded-2xl border p-4 ${isNight ? "border-slate-800 bg-slate-950" : "border-amber-200/80 bg-amber-50/50"}`}>
+                  <p className={`text-xs font-bold uppercase tracking-wider ${isNight ? "text-slate-400" : "text-amber-900/70"}`}>Total Site Visitors</p>
+                  <p className="mt-2 text-3xl font-black text-amber-500">{visitorStats.totalVisits}</p>
+                  <p className="mt-1 text-[11px] font-semibold text-slate-400">Total website traffic logged</p>
+                </div>
+
+                <div className={`rounded-2xl border p-4 ${isNight ? "border-slate-800 bg-slate-950" : "border-amber-200/80 bg-amber-50/50"}`}>
+                  <p className={`text-xs font-bold uppercase tracking-wider ${isNight ? "text-slate-400" : "text-amber-900/70"}`}>Unique Visitors</p>
+                  <p className="mt-2 text-3xl font-black text-sky-400">{visitorStats.uniqueVisitors}</p>
+                  <p className="mt-1 text-[11px] font-semibold text-slate-400">Distinct devices & sessions</p>
+                </div>
+
+                <div className={`rounded-2xl border p-4 ${isNight ? "border-slate-800 bg-slate-950" : "border-amber-200/80 bg-amber-50/50"}`}>
+                  <p className={`text-xs font-bold uppercase tracking-wider ${isNight ? "text-slate-400" : "text-amber-900/70"}`}>Today's Visitors</p>
+                  <p className="mt-2 text-3xl font-black text-emerald-400">{visitorStats.todayVisits}</p>
+                  <p className="mt-1 text-[11px] font-semibold text-slate-400">Visits recorded today</p>
+                </div>
+              </div>
             </div>
 
             {/* Pipeline Status Breakdown */}
@@ -1199,8 +1265,15 @@ export function AdminPortal() {
           <div className={`rounded-3xl border p-6 backdrop-blur-xl ${
             isNight ? "border-slate-800 bg-slate-900/60" : "border-amber-200/80 bg-white/90 shadow-xl shadow-amber-950/5"
           }`}>
-            <h2 className={`font-display text-xl font-black ${isNight ? "text-white" : "text-slate-900"}`}>Customer Table / Event Bookings</h2>
-            <p className={`text-xs font-medium mb-6 ${isNight ? "text-slate-400" : "text-amber-900/70"}`}>Reservations and cafe table bookings received from customers.</p>
+            <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+              <div>
+                <h2 className={`font-display text-xl font-black ${isNight ? "text-white" : "text-slate-900"}`}>City Territory & Outlet Bookings</h2>
+                <p className={`text-xs font-medium ${isNight ? "text-slate-400" : "text-amber-900/70"}`}>Franchise city territory reservations and outlet bookings received from customers.</p>
+              </div>
+              <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-xs font-extrabold text-amber-500">
+                {bookings.length} Total Bookings
+              </span>
+            </div>
 
             <div className="space-y-3">
               {bookings.length === 0 && (
@@ -1208,24 +1281,42 @@ export function AdminPortal() {
                   isNight ? "border-slate-800 bg-slate-950" : "border-amber-200 bg-amber-50/40"
                 }`}>
                   <Calendar size={28} className="mx-auto text-amber-500 mb-2" />
-                  <p className={`text-sm font-bold ${isNight ? "text-slate-400" : "text-amber-900/70"}`}>No customer bookings submitted yet.</p>
+                  <p className={`text-sm font-bold ${isNight ? "text-slate-400" : "text-amber-900/70"}`}>No bookings submitted yet.</p>
                 </div>
               )}
 
               {bookings.map((b) => (
-                <div key={b._id || b.id} className={`flex flex-wrap items-center justify-between gap-4 rounded-2xl border p-4 ${
+                <div key={b._id || b.id} className={`flex flex-wrap items-start justify-between gap-4 rounded-2xl border p-4 ${
                   isNight ? "border-slate-800 bg-slate-950" : "border-amber-200/80 bg-white shadow-sm"
                 }`}>
-                  <div>
-                    <h3 className={`font-bold ${isNight ? "text-white" : "text-slate-900"}`}>{b.name} <span className="text-xs text-amber-500">({b.phone})</span></h3>
-                    <p className={`text-xs ${isNight ? "text-slate-400" : "text-amber-900/70"}`}>
-                      Date: {b.date || "N/A"} · Time: {b.time || "N/A"} · Guests: {b.guests || 2} · Brand: {b.brand || "Family Cafe King"}
+                  <div className="space-y-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3 className={`font-bold text-base ${isNight ? "text-white" : "text-slate-900"}`}>{b.name}</h3>
+                      <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-0.5 text-xs font-bold text-amber-500">
+                        📞 {b.phone}
+                      </span>
+                      {b.email && <span className={`text-xs ${isNight ? "text-slate-400" : "text-amber-900/70"}`}>✉️ {b.email}</span>}
+                    </div>
+
+                    <p className={`text-xs font-semibold ${isNight ? "text-slate-300" : "text-amber-900/90"}`}>
+                      Brand: <span className="text-amber-500 font-extrabold">{b.brand || "Family Cafe King"}</span>
+                      {(b as any).city && <> · City: <span className="font-extrabold text-emerald-400">{(b as any).city}</span></>}
+                      {(b as any).budget && <> · Budget: <span className="font-extrabold text-sky-400">{(b as any).budget}</span></>}
+                      {b.date && <> · Date: {b.date}</>}
+                      {b.time && <> · Time: {b.time}</>}
                     </p>
-                    {b.notes && <p className="mt-1 text-xs italic text-amber-500">"{b.notes}"</p>}
+
+                    {b.notes && (
+                      <p className={`mt-2 text-xs italic p-2.5 rounded-xl border ${
+                        isNight ? "bg-slate-900 border-slate-800 text-amber-300" : "bg-amber-50 border-amber-200 text-amber-950 font-medium"
+                      }`}>
+                        "{b.notes}"
+                      </p>
+                    )}
                   </div>
                   <button
                     onClick={() => void removeBooking((b._id || b.id)!)}
-                    className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-1.5 text-xs font-bold text-rose-500 hover:bg-rose-500/20"
+                    className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-1.5 text-xs font-bold text-rose-500 hover:bg-rose-500/20 cursor-pointer"
                   >
                     Delete
                   </button>

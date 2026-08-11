@@ -1,11 +1,14 @@
 import {
   apiAdminLogin,
+  apiCreateBooking,
   apiCreateLaunch,
   apiCreateLead,
   apiCreateSlide,
+  apiDeleteBooking,
   apiDeleteLaunch,
   apiDeleteLead,
   apiDeleteSlide,
+  apiGetBookings,
   apiGetLaunches,
   apiGetLeads,
   apiGetSlides,
@@ -13,6 +16,7 @@ import {
   apiUpdateLead,
   apiUpdateSlide,
   checkBackendHealth,
+  type MernBooking,
   type MernLaunch,
   type MernLead,
   type MernSlide,
@@ -567,21 +571,308 @@ export async function signInAdmin(email: string, password: string): Promise<{ ac
   return { accessToken: "local-demo-token", email: email || "shivamsri.srivastava2@gmail.com" };
 }
 
+const BOOKINGS_KEY = "fck_bookings_v1";
+
+export interface BookingInput {
+  name: string;
+  phone: string;
+  email?: string;
+  city?: string;
+  brand?: string;
+  budget?: string;
+  date?: string;
+  time?: string;
+  guests?: number;
+  notes?: string;
+}
+
+export interface BookingRecord extends BookingInput {
+  id: string;
+  created_at: string;
+  createdAt?: string;
+}
+
+export const notifyBookingsChanged = () => {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("fck_bookings_updated"));
+  }
+};
+
+export async function saveBooking(input: BookingInput): Promise<{ record: BookingRecord; storage: string }> {
+  try {
+    const isMernAlive = await checkBackendHealth();
+    if (isMernAlive) {
+      const created = await apiCreateBooking({
+        name: input.name,
+        phone: input.phone,
+        email: input.email || "",
+        date: input.date || new Date().toISOString().slice(0, 10),
+        time: input.time || "12:00 PM",
+        guests: input.guests || 1,
+        brand: input.brand || "Family Cafe King",
+        notes: input.city ? `City: ${input.city} | Budget: ${input.budget || "N/A"} | ${input.notes || ""}` : input.notes || "",
+      });
+      const record: BookingRecord = {
+        ...input,
+        id: created._id || created.id || makeId("booking"),
+        created_at: created.createdAt || new Date().toISOString(),
+      };
+      const localBookings = readJson<BookingRecord[]>(BOOKINGS_KEY, []);
+      writeJson(BOOKINGS_KEY, [record, ...localBookings.filter((b) => b.id !== record.id)]);
+      notifyBookingsChanged();
+      return { record, storage: "mern" };
+    }
+  } catch (err) {
+    console.warn("MERN Save Booking failed, using local storage fallback", err);
+  }
+
+  const record: BookingRecord = {
+    ...input,
+    id: makeId("booking"),
+    created_at: new Date().toISOString(),
+    createdAt: new Date().toISOString(),
+  };
+  const localBookings = readJson<BookingRecord[]>(BOOKINGS_KEY, []);
+  writeJson(BOOKINGS_KEY, [record, ...localBookings]);
+  notifyBookingsChanged();
+  return { record, storage: "local" };
+}
+
+export async function listBookings(accessToken?: string): Promise<BookingRecord[]> {
+  let mernRows: BookingRecord[] = [];
+  try {
+    const isMernAlive = await checkBackendHealth();
+    if (isMernAlive) {
+      const rows = await apiGetBookings(accessToken);
+      mernRows = rows.map((b) => ({
+        id: b._id || b.id || makeId("booking"),
+        name: b.name || "",
+        phone: b.phone || "",
+        email: b.email || "",
+        city: (b as any).city || "",
+        budget: (b as any).budget || "",
+        date: b.date || "",
+        time: b.time || "",
+        guests: b.guests || 1,
+        brand: b.brand || "Family Cafe King",
+        notes: b.notes || "",
+        created_at: b.createdAt || new Date().toISOString(),
+        createdAt: b.createdAt || new Date().toISOString(),
+      }));
+    }
+  } catch (err) {
+    console.warn("MERN List Bookings failed, reading local storage", err);
+  }
+
+  const localRows = readJson<BookingRecord[]>(BOOKINGS_KEY, []);
+
+  const map = new Map<string, BookingRecord>();
+  [...mernRows, ...localRows].forEach((item) => {
+    if (item && item.id && !map.has(item.id)) {
+      map.set(item.id, item);
+    }
+  });
+
+  return Array.from(map.values()).sort((a, b) =>
+    (b.created_at || b.createdAt || "").localeCompare(a.created_at || a.createdAt || "")
+  );
+}
+
+export async function deleteBookingRecord(id: string, accessToken?: string): Promise<void> {
+  try {
+    const isMernAlive = await checkBackendHealth();
+    if (isMernAlive) {
+      await apiDeleteBooking(id, accessToken);
+    }
+  } catch (err) {
+    console.warn("MERN Delete Booking failed, removing locally", err);
+  }
+
+  const current = readJson<BookingRecord[]>(BOOKINGS_KEY, []);
+  writeJson(BOOKINGS_KEY, current.filter((b) => (b.id || (b as any)._id) !== id));
+  notifyBookingsChanged();
+}
+
+export interface VisitorStats {
+  totalVisits: number;
+  uniqueVisitors: number;
+  todayVisits: number;
+  lastVisitAt: string;
+}
+
+export function trackVisitor(): VisitorStats {
+  if (typeof window === "undefined") {
+    return { totalVisits: 1, uniqueVisitors: 1, todayVisits: 1, lastVisitAt: new Date().toISOString() };
+  }
+
+  const dateKey = new Date().toISOString().slice(0, 10);
+  const STATS_KEY = "fck_visitor_stats_v1";
+  const VISITOR_ID_KEY = "fck_visitor_uuid_v1";
+
+  let visitorId = window.localStorage.getItem(VISITOR_ID_KEY);
+  let isNewUnique = false;
+  if (!visitorId) {
+    visitorId = `v_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+    window.localStorage.setItem(VISITOR_ID_KEY, visitorId);
+    isNewUnique = true;
+  }
+
+  let stats: {
+    totalVisits: number;
+    uniqueVisitors: number;
+    todayVisits: number;
+    lastDate: string;
+    lastVisitAt: string;
+  };
+
+  try {
+    const raw = window.localStorage.getItem(STATS_KEY);
+    stats = raw
+      ? JSON.parse(raw)
+      : { totalVisits: 0, uniqueVisitors: 0, todayVisits: 0, lastDate: dateKey, lastVisitAt: "" };
+  } catch {
+    stats = { totalVisits: 0, uniqueVisitors: 0, todayVisits: 0, lastDate: dateKey, lastVisitAt: "" };
+  }
+
+  const isToday = stats.lastDate === dateKey;
+  const todayVisits = isToday ? stats.todayVisits + 1 : 1;
+  const totalVisits = (stats.totalVisits || 0) + 1;
+  const uniqueVisitors = (stats.uniqueVisitors || 0) + (isNewUnique ? 1 : 0);
+  const lastVisitAt = new Date().toISOString();
+
+  const updated = {
+    totalVisits: Math.max(totalVisits, uniqueVisitors, 1),
+    uniqueVisitors: Math.max(uniqueVisitors, 1),
+    todayVisits,
+    lastDate: dateKey,
+    lastVisitAt,
+  };
+
+  try {
+    window.localStorage.setItem(STATS_KEY, JSON.stringify(updated));
+  } catch {
+    // Ignore storage errors
+  }
+
+  return {
+    totalVisits: updated.totalVisits,
+    uniqueVisitors: updated.uniqueVisitors,
+    todayVisits: updated.todayVisits,
+    lastVisitAt: updated.lastVisitAt,
+  };
+}
+
+export function getVisitorStats(): VisitorStats {
+  if (typeof window === "undefined") {
+    return { totalVisits: 1, uniqueVisitors: 1, todayVisits: 1, lastVisitAt: new Date().toISOString() };
+  }
+  const dateKey = new Date().toISOString().slice(0, 10);
+  const STATS_KEY = "fck_visitor_stats_v1";
+  try {
+    const raw = window.localStorage.getItem(STATS_KEY);
+    if (!raw) return trackVisitor();
+    const parsed = JSON.parse(raw);
+    const isToday = parsed.lastDate === dateKey;
+    return {
+      totalVisits: Math.max(Number(parsed.totalVisits) || 1, 1),
+      uniqueVisitors: Math.max(Number(parsed.uniqueVisitors) || 1, 1),
+      todayVisits: isToday ? Math.max(Number(parsed.todayVisits) || 1, 1) : 1,
+      lastVisitAt: parsed.lastVisitAt || new Date().toISOString(),
+    };
+  } catch {
+    return trackVisitor();
+  }
+}
+
 export function leadsToCsv(leads: LeadRecord[]): string {
   const escape = (value: string) => `"${(value || "").replace(/"/g, '""')}"`;
   const rows = [
-    ["Date", "Name", "Phone", "Email", "City", "Brand", "Budget", "Status", "Notes"],
+    ["Submitted Date", "Request Type", "Name", "Phone", "Email", "City", "Brand", "Budget / Message", "Status", "Notes", "Source"],
     ...leads.map((lead) => [
       new Date(lead.created_at).toLocaleString(),
-      lead.name,
-      lead.phone,
-      lead.email,
-      lead.city,
-      lead.brand,
-      lead.budget,
-      lead.status,
-      lead.notes,
+      "Franchise Lead",
+      lead.name || "",
+      lead.phone || "",
+      lead.email || "",
+      lead.city || "",
+      lead.brand || "",
+      lead.budget || "",
+      lead.status || "New",
+      lead.notes || "",
+      lead.source_page || "landing-page",
     ]),
   ];
   return rows.map((row) => row.map(escape).join(",")).join("\n");
+}
+
+export function allRequestsToCsv(
+  leads: LeadRecord[] = [],
+  bookings: any[] = [],
+  contacts: any[] = []
+): string {
+  const escape = (value: string) => `"${(value || "").replace(/"/g, '""')}"`;
+
+  const leadRows = leads.map((lead) => [
+    new Date(lead.created_at || Date.now()).toLocaleString(),
+    "Franchise Application Lead",
+    lead.name || "",
+    lead.phone || "",
+    lead.email || "",
+    lead.city || "",
+    lead.brand || "Family Cafe King",
+    lead.budget || "",
+    lead.status || "New",
+    lead.notes || "",
+    lead.source_page || "landing-page",
+  ]);
+
+  const bookingRows = bookings.map((b) => [
+    new Date(b.createdAt || Date.now()).toLocaleString(),
+    "Franchise Outlet Booking",
+    b.name || "",
+    b.phone || "",
+    b.email || "",
+    "-",
+    b.brand || "Family Cafe King",
+    `Date: ${b.date || "N/A"} | Time: ${b.time || "N/A"} | Guests: ${b.guests || "N/A"}`,
+    "New",
+    b.notes || "",
+    "booking-form",
+  ]);
+
+  const contactRows = contacts.map((c) => [
+    new Date(c.createdAt || Date.now()).toLocaleString(),
+    "Direct Contact Inquiry",
+    c.name || "",
+    c.phone || "",
+    c.email || "",
+    "-",
+    "Family Cafe King",
+    `Subject: ${c.subject || "General Inquiry"} | Message: ${c.message || ""}`,
+    "New",
+    "",
+    "contact-form",
+  ]);
+
+  const allCombined = [...leadRows, ...bookingRows, ...contactRows].sort((a, b) => {
+    const timeA = new Date(a[0]).getTime() || 0;
+    const timeB = new Date(b[0]).getTime() || 0;
+    return timeB - timeA;
+  });
+
+  const header = [
+    "Submitted Date",
+    "Request Type",
+    "Name",
+    "Phone",
+    "Email",
+    "City",
+    "Brand",
+    "Budget / Message",
+    "Status",
+    "Notes",
+    "Source",
+  ];
+
+  return [header, ...allCombined].map((row) => row.map(escape).join(",")).join("\n");
 }

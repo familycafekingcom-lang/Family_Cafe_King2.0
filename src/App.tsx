@@ -25,9 +25,10 @@ import {
 import { Reveal } from "./components/Reveal";
 import { BrandModal } from "./components/BrandModal";
 import { LegalModal } from "./components/LegalModal";
+import { CityBookingModal } from "./components/CityBookingModal";
 import { UpcomingLaunches } from "./components/UpcomingLaunches";
 import { AdminPortal } from "./components/AdminPortal";
-import { DATABASE_MODE, DEFAULT_SLIDES, listSlides, saveLead, type SaveResult, type SlideRecord } from "./lib/database";
+import { DATABASE_MODE, DEFAULT_SLIDES, listSlides, saveLead, trackVisitor, type SaveResult, type SlideRecord } from "./lib/database";
 import {
   BRANDS,
   FEATURES,
@@ -110,8 +111,11 @@ function Nav() {
         <a href="#top" className="flex items-center gap-2.5 group">
           <span className="relative grid h-11 w-11 flex-shrink-0 place-items-center overflow-hidden rounded-xl border border-maroon-900/15 bg-white p-1 shadow-md transition-transform group-hover:scale-105">
             <img
-              src={BRANDS.find((b) => b.key === "lassi")?.logo || "https://customer-assets-m6fa6gv7.emergentagent.net/job_5c36eac6-4afa-404a-9f8a-3a2a73a148f4/artifacts/t8gmidb5_FCK%20LOGO.png"}
-              alt="Lassi King Logo"
+              src={
+                BRANDS.find((b) => b.key === "fck")?.logo ||
+                "https://customer-assets-m6fa6gv7.emergentagent.net/job_5c36eac6-4afa-404a-9f8a-3a2a73a148f4/artifacts/t8gmidb5_FCK%20LOGO.png"
+              }
+              alt="Family Cafe King Logo"
               className="max-h-full max-w-full object-contain"
             />
           </span>
@@ -1452,12 +1456,19 @@ function Footer({
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <div className="grid grid-cols-1 gap-10 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
           <div>
-            <a href="#top" className="flex items-center gap-2.5">
-              <span className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-amber-500 via-orange-600 to-rose-700 shadow-lg shadow-orange-500/30">
-                <Crown size={18} />
+            <a href="#top" className="flex items-center gap-3.5 group">
+              <span className="relative grid h-14 w-14 flex-shrink-0 place-items-center overflow-hidden rounded-2xl border border-amber-400/30 bg-white p-1.5 shadow-xl shadow-orange-500/15 transition-transform group-hover:scale-105">
+                <img
+                  src={
+                    BRANDS.find((b) => b.key === "fck")?.logo ||
+                    "https://customer-assets-m6fa6gv7.emergentagent.net/job_5c36eac6-4afa-404a-9f8a-3a2a73a148f4/artifacts/t8gmidb5_FCK%20LOGO.png"
+                  }
+                  alt="Family Cafe King Logo"
+                  className="h-full w-full object-contain rounded-xl"
+                />
               </span>
               <div className="leading-tight">
-                <div className="font-display text-lg font-bold">Family Cafe King</div>
+                <div className="font-display text-lg font-bold text-white">Family Cafe King</div>
                 <div className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-amber-300">
                   350+ Franchises Pan-India
                 </div>
@@ -1625,12 +1636,22 @@ export default function App() {
   const [selectedBrand, setSelectedBrand] = useState<BrandData | null>(null);
   const [leadBrand, setLeadBrand] = useState<string | undefined>(undefined);
   const [legalType, setLegalType] = useState<"privacy" | "terms" | null>(null);
+  const [cityBookingState, setCityBookingState] = useState<{
+    isOpen: boolean;
+    city?: string;
+    brand?: string;
+  }>({ isOpen: false });
+
   const checkPortalRoute = () => {
     const h = window.location.hash.toLowerCase();
     return h.startsWith("#admin") || h.startsWith("#login") || h.startsWith("#franchise-login") || h.startsWith("#portal");
   };
 
   const [isAdminRoute, setIsAdminRoute] = useState(checkPortalRoute);
+
+  useEffect(() => {
+    trackVisitor();
+  }, []);
 
   useEffect(() => {
     const onHashChange = () => setIsAdminRoute(checkPortalRoute());
@@ -1640,6 +1661,10 @@ export default function App() {
 
   const handleOpenBrand = (brand: BrandData) => {
     setSelectedBrand(brand);
+  };
+
+  const handleOpenCityBooking = (city?: string, brand?: string) => {
+    setCityBookingState({ isOpen: true, city, brand });
   };
 
   const handleSelectLeadFromModal = (brandName: string) => {
@@ -1660,7 +1685,7 @@ export default function App() {
       <main>
         <Hero onOpenBrand={handleOpenBrand} />
         <SocialProof />
-        <UpcomingLaunches />
+        <UpcomingLaunches onOpenCityBooking={handleOpenCityBooking} />
         <Brands onOpenBrand={handleOpenBrand} />
         <Features />
         <Showcase onOpenBrand={handleOpenBrand} />
@@ -1687,6 +1712,14 @@ export default function App() {
       <LegalModal
         type={legalType}
         onClose={() => setLegalType(null)}
+      />
+
+      {/* City Territory Booking Popup Modal */}
+      <CityBookingModal
+        isOpen={cityBookingState.isOpen}
+        initialCity={cityBookingState.city}
+        initialBrand={cityBookingState.brand}
+        onClose={() => setCityBookingState({ isOpen: false })}
       />
 
       {/* Persistent WhatsApp Chat CTA */}
