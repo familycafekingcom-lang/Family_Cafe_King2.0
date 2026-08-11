@@ -4,6 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "start": "node backend/server.js",
     "dev": "vite",
     "backend": "node backend/server.js",
     "dev:all": "npx concurrently \"npm run dev\" \"npm run backend\"",
