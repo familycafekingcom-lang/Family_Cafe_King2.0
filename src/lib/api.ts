@@ -84,7 +84,7 @@ export interface AdminStats {
   totalSlides?: number;
 }
 
-const API_BASE = (import.meta.env.VITE_API_URL || "http://localhost:5000/api").replace(/\/$/, "");
+const API_BASE = (import.meta.env.VITE_API_URL || "https://family-cafe-king2-0-1.onrender.com/api").replace(/\/$/, "");
 
 // Helper to construct request headers with token
 const getHeaders = (token?: string, isJson = true): HeadersInit => {
