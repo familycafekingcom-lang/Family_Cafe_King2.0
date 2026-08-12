@@ -18,13 +18,21 @@ export interface MernBooking {
   _id?: string;
   id?: string;
   name: string;
+  customerName?: string;
   phone: string;
   email?: string;
+  city?: string;
+  budget?: string;
   date?: string;
+  bookingDate?: string;
   time?: string;
+  bookingTime?: string;
   guests?: number;
+  totalPersons?: number;
   brand?: string;
+  outlet?: string;
   notes?: string;
+  specialRequest?: string;
   createdAt?: string;
 }
 

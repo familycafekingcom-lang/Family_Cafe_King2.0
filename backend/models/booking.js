@@ -8,6 +8,12 @@ const bookingSchema = new mongoose.Schema(
       default: "Valued Customer",
     },
 
+    name: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
     phone: {
       type: String,
       required: true,
@@ -23,10 +29,22 @@ const bookingSchema = new mongoose.Schema(
     city: {
       type: String,
       trim: true,
-      default: "India",
+      default: "",
+    },
+
+    budget: {
+      type: String,
+      trim: true,
+      default: "",
     },
 
     outlet: {
+      type: String,
+      trim: true,
+      default: "Family Cafe King",
+    },
+
+    brand: {
       type: String,
       trim: true,
       default: "Family Cafe King",

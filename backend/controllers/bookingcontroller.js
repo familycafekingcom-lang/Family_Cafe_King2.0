@@ -9,6 +9,7 @@ exports.createBooking = async (req, res) => {
       phone,
       email,
       city,
+      budget,
       brand,
       outlet,
       date,
@@ -21,12 +22,17 @@ exports.createBooking = async (req, res) => {
       specialRequest,
     } = req.body;
 
+    const resolvedName = customerName || name || "Valued Customer";
+
     const booking = await Booking.create({
-      customerName: customerName || name || "Valued Customer",
+      customerName: resolvedName,
+      name: resolvedName,
       phone: phone || "",
       email: email || "",
-      city: city || "India",
+      city: city || "",
+      budget: budget || "",
       outlet: outlet || brand || "Family Cafe King",
+      brand: brand || outlet || "Family Cafe King",
       bookingDate: bookingDate || date || new Date(),
       bookingTime: bookingTime || time || "12:00 PM",
       totalPersons: Number(totalPersons || guests || 1),
@@ -45,6 +51,7 @@ exports.createBooking = async (req, res) => {
     });
   }
 };
+
 
 // Get All Bookings
 exports.getAllBookings = async (req, res) => {

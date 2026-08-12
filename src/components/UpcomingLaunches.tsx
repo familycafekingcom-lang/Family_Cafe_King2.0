@@ -53,12 +53,12 @@ export function UpcomingLaunches({ onOpenCityBooking }: UpcomingLaunchesProps = 
             </span>
           </Reveal>
           <Reveal delay={80}>
-            <h2 className="mt-5 font-display text-4xl font-extrabold tracking-tight text-maroon-950 sm:text-5xl lg:text-6xl">
+            <h2 className="mt-5 font-display text-4xl font-extrabold tracking-tight text-maroon-950 sm:text-5xl lg:text-6xl text-center">
               Brewing in <span className="text-gradient-warm">new destinations</span>
             </h2>
           </Reveal>
           <Reveal delay={140}>
-            <p className="mx-auto mt-4 max-w-2xl text-[17px] font-semibold leading-relaxed text-maroon-900">
+            <p className="mx-auto mt-4 max-w-2xl text-[17px] font-semibold leading-relaxed text-maroon-900 text-center">
               Fresh Family Cafe King outlets opening across the country — be the first to visit, or partner with us to open one in your city.
             </p>
           </Reveal>

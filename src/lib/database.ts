@@ -16,7 +16,6 @@ import {
   apiUpdateLead,
   apiUpdateSlide,
   checkBackendHealth,
-  type MernBooking,
   type MernLaunch,
   type MernLead,
   type MernSlide,
@@ -473,8 +472,16 @@ export async function listSlides(_accessToken?: string): Promise<SlideRecord[]> 
     const isMernAlive = await checkBackendHealth();
     if (isMernAlive) {
       const mernSlides = await apiGetSlides();
-      if (mernSlides && mernSlides.length > 0) {
+      if (mernSlides && mernSlides.length >= 4) {
         return mernSlides.map(normalizeSlide).sort((a, b) => a.order - b.order);
+      }
+      if (mernSlides && mernSlides.length > 0 && mernSlides.length < 4) {
+        const existingNames = new Set(mernSlides.map((s) => s.brand_name.toLowerCase()));
+        const missing = DEFAULT_SLIDES.filter(
+          (d) => !existingNames.has(d.brand_name.toLowerCase())
+        );
+        const merged = [...mernSlides, ...missing];
+        return merged.map(normalizeSlide).sort((a, b) => a.order - b.order);
       }
     }
   } catch (err) {
@@ -482,8 +489,49 @@ export async function listSlides(_accessToken?: string): Promise<SlideRecord[]> 
   }
 
   const saved = readJson<SlideRecord[] | null>(SLIDES_KEY, null);
-  const rows = (saved && saved.length >= 5 ? saved : DEFAULT_SLIDES).map(normalizeSlide);
-  return rows.sort((a, b) => a.order - b.order);
+  if (!saved || saved.length < 4) {
+    writeJson(SLIDES_KEY, DEFAULT_SLIDES);
+    return DEFAULT_SLIDES.map(normalizeSlide);
+  }
+  return saved.map(normalizeSlide).sort((a, b) => a.order - b.order);
+}
+
+export async function seedDefaultSlides(accessToken?: string): Promise<SlideRecord[]> {
+  try {
+    const isMernAlive = await checkBackendHealth();
+    if (isMernAlive && accessToken) {
+      for (const defSlide of DEFAULT_SLIDES) {
+        await apiCreateSlide(
+          {
+            title: defSlide.title,
+            subtitle: defSlide.subtitle,
+            brand_name: defSlide.brand_name,
+            badge_text: defSlide.badge_text,
+            image_url: defSlide.image_url,
+            price_display: defSlide.price_display,
+            space_req: defSlide.space_req,
+            cta_text: defSlide.cta_text,
+            cta_link: defSlide.cta_link,
+            accent_color: defSlide.accent_color,
+            is_active: true,
+            order: defSlide.order,
+          },
+          accessToken
+        ).catch(() => {});
+      }
+      const updated = await apiGetSlides().catch(() => null);
+      if (updated && updated.length > 0) {
+        notifySlidesChanged();
+        return updated.map(normalizeSlide).sort((a, b) => a.order - b.order);
+      }
+    }
+  } catch (err) {
+    console.warn("MERN Seed slides failed, falling back to local defaults", err);
+  }
+
+  writeJson(SLIDES_KEY, DEFAULT_SLIDES);
+  notifySlidesChanged();
+  return DEFAULT_SLIDES.map(normalizeSlide);
 }
 
 export async function saveSlide(input: SlideInput, accessToken?: string): Promise<SlideRecord> {
@@ -604,13 +652,21 @@ export async function saveBooking(input: BookingInput): Promise<{ record: Bookin
     if (isMernAlive) {
       const created = await apiCreateBooking({
         name: input.name,
+        customerName: input.name,
         phone: input.phone,
         email: input.email || "",
-        date: input.date || new Date().toISOString().slice(0, 10),
-        time: input.time || "12:00 PM",
-        guests: input.guests || 1,
+        city: input.city || "",
+        budget: input.budget || "",
         brand: input.brand || "Family Cafe King",
-        notes: input.city ? `City: ${input.city} | Budget: ${input.budget || "N/A"} | ${input.notes || ""}` : input.notes || "",
+        outlet: input.brand || "Family Cafe King",
+        date: input.date || new Date().toISOString().slice(0, 10),
+        bookingDate: input.date || new Date().toISOString().slice(0, 10),
+        time: input.time || "12:00 PM",
+        bookingTime: input.time || "12:00 PM",
+        guests: input.guests || 1,
+        totalPersons: input.guests || 1,
+        notes: input.notes || `City Territory Booking Request for ${input.city || "City"}`,
+        specialRequest: input.notes || `City Territory Booking Request for ${input.city || "City"}`,
       });
       const record: BookingRecord = {
         ...input,
@@ -646,16 +702,16 @@ export async function listBookings(accessToken?: string): Promise<BookingRecord[
       const rows = await apiGetBookings(accessToken);
       mernRows = rows.map((b) => ({
         id: b._id || b.id || makeId("booking"),
-        name: b.name || "",
+        name: b.customerName || b.name || "Territory Applicant",
         phone: b.phone || "",
         email: b.email || "",
         city: (b as any).city || "",
         budget: (b as any).budget || "",
-        date: b.date || "",
-        time: b.time || "",
-        guests: b.guests || 1,
-        brand: b.brand || "Family Cafe King",
-        notes: b.notes || "",
+        date: b.date || (b as any).bookingDate || "",
+        time: b.time || (b as any).bookingTime || "",
+        guests: b.totalPersons || b.guests || 1,
+        brand: b.outlet || b.brand || "Family Cafe King",
+        notes: b.specialRequest || b.notes || "",
         created_at: b.createdAt || new Date().toISOString(),
         createdAt: b.createdAt || new Date().toISOString(),
       }));
@@ -666,8 +722,32 @@ export async function listBookings(accessToken?: string): Promise<BookingRecord[
 
   const localRows = readJson<BookingRecord[]>(BOOKINGS_KEY, []);
 
+  // Build a local lookup for fast merge
+  const localMap = new Map<string, BookingRecord>();
+  localRows.forEach((item) => {
+    if (item && item.id) localMap.set(item.id, item);
+  });
+
   const map = new Map<string, BookingRecord>();
-  [...mernRows, ...localRows].forEach((item) => {
+
+  // Add MERN rows first, but fill missing fields from localStorage
+  mernRows.forEach((item) => {
+    if (!item || !item.id) return;
+    const local = localMap.get(item.id);
+    map.set(item.id, {
+      ...item,
+      // If MERN didn't return these fields (old backend), use local data
+      name: item.name || local?.name || "Territory Applicant",
+      city: item.city || local?.city || "",
+      budget: item.budget || local?.budget || "",
+      brand: item.brand || local?.brand || "Family Cafe King",
+      notes: item.notes || local?.notes || "",
+      email: item.email || local?.email || "",
+    });
+  });
+
+  // Add any local-only rows (not yet synced to MERN)
+  localRows.forEach((item) => {
     if (item && item.id && !map.has(item.id)) {
       map.set(item.id, item);
     }

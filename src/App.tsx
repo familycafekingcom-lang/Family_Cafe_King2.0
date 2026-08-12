@@ -28,7 +28,7 @@ import { LegalModal } from "./components/LegalModal";
 import { CityBookingModal } from "./components/CityBookingModal";
 import { UpcomingLaunches } from "./components/UpcomingLaunches";
 import { AdminPortal } from "./components/AdminPortal";
-import { DATABASE_MODE, DEFAULT_SLIDES, listSlides, saveLead, trackVisitor, type SaveResult, type SlideRecord } from "./lib/database";
+import { DEFAULT_SLIDES, listSlides, saveLead, trackVisitor, type SlideRecord } from "./lib/database";
 import {
   BRANDS,
   FEATURES,
@@ -206,6 +206,7 @@ function Nav() {
 function Hero({ onOpenBrand }: { onOpenBrand: (brand: BrandData) => void }) {
   const [slides, setSlides] = useState<SlideRecord[]>(DEFAULT_SLIDES);
   const [slideIndex, setSlideIndex] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -234,16 +235,16 @@ function Hero({ onOpenBrand }: { onOpenBrand: (brand: BrandData) => void }) {
   }, []);
 
   useEffect(() => {
-    if (slides.length <= 1) return;
+    if (slides.length <= 1 || isPaused) return;
     const interval = setInterval(() => {
-      setSlideIndex((curr) => (curr + 1) % slides.length);
-    }, 3800);
+      setSlideIndex((curr) => (curr + 1) % (slides.length || 1));
+    }, 3500);
     return () => clearInterval(interval);
-  }, [slides.length]);
+  }, [slides.length, isPaused]);
 
   const currentSlide = useMemo(() => {
     if (!slides.length) return DEFAULT_SLIDES[0];
-    return slides[slideIndex % slides.length];
+    return slides[slideIndex % slides.length] || DEFAULT_SLIDES[0];
   }, [slides, slideIndex]);
 
   const matchedBrand = useMemo(() => {
@@ -253,11 +254,14 @@ function Hero({ onOpenBrand }: { onOpenBrand: (brand: BrandData) => void }) {
     return found || BRANDS[0];
   }, [currentSlide.brand_name]);
 
-  const nextSlide = () => setSlideIndex((curr) => (curr + 1) % slides.length);
-  const prevSlide = () => setSlideIndex((curr) => (curr - 1 + slides.length) % slides.length);
+  const nextSlide = () => setSlideIndex((curr) => (curr + 1) % (slides.length || 1));
+  const prevSlide = () => setSlideIndex((curr) => (curr - 1 + slides.length) % (slides.length || 1));
 
   return (
-    <section id="top" className="relative overflow-hidden pt-28 pb-20 sm:pt-36 sm:pb-28 lg:pt-40">
+    <section
+      id="top"
+      className="relative overflow-hidden pt-28 pb-20 sm:pt-36 sm:pb-28 lg:pt-40"
+    >
       {/* Ambient background */}
       <div className="radial-warm absolute inset-0 -z-10" />
       <div className="absolute inset-0 -z-10 opacity-70 bg-grain" />
@@ -286,7 +290,7 @@ function Hero({ onOpenBrand }: { onOpenBrand: (brand: BrandData) => void }) {
         {/* LEFT copy */}
         <div>
           <Reveal>
-            <div className="flex min-h-[32px] items-center">
+            <div className="flex h-8 items-center">
               <span className="inline-flex items-center gap-2 rounded-full border border-maroon-900/20 bg-white/80 px-4 py-1.5 text-[12px] font-bold uppercase tracking-[0.14em] text-maroon-950 backdrop-blur shadow-2xs">
                 <span className="relative flex h-2.5 w-2.5">
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500 opacity-75" />
@@ -298,20 +302,23 @@ function Hero({ onOpenBrand }: { onOpenBrand: (brand: BrandData) => void }) {
           </Reveal>
 
           <Reveal delay={80}>
-            <div className="mt-4 flex min-h-[125px] items-center sm:min-h-[160px] lg:min-h-[185px]">
-              <h1 className="font-display text-[36px] font-bold leading-[1.08] tracking-tight text-maroon-950 sm:text-[50px] sm:leading-[1.06] lg:text-[58px] lg:leading-[1.05]">
+            <div className="mt-4 flex h-[120px] items-start overflow-hidden sm:h-[150px] lg:h-[175px]">
+              <h1
+                key={currentSlide.id + "-title"}
+                className="font-display text-[32px] font-bold leading-[1.1] tracking-tight text-maroon-950 sm:text-[46px] sm:leading-[1.08] lg:text-[54px] lg:leading-[1.06] transition-opacity duration-300"
+              >
                 {currentSlide.title}
               </h1>
             </div>
           </Reveal>
 
           <Reveal delay={160}>
-            <div className="mt-3 flex min-h-[40px] items-center">
+            <div className="mt-2 flex h-10 items-center">
               <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 text-[19px] sm:text-[22px]">
                 <span className="font-bold text-maroon-950">Featured Brand:</span>
                 <span className="relative inline-flex h-9 items-baseline overflow-hidden sm:h-10">
                   <span
-                    key={currentSlide.id}
+                    key={currentSlide.id + "-brand"}
                     className="word-flip font-display text-2xl font-bold text-gradient-gold sm:text-3xl"
                   >
                     {currentSlide.brand_name}
@@ -322,8 +329,11 @@ function Hero({ onOpenBrand }: { onOpenBrand: (brand: BrandData) => void }) {
           </Reveal>
 
           <Reveal delay={220}>
-            <div className="mt-3 flex min-h-[58px] items-start sm:min-h-[64px]">
-              <p className="max-w-xl text-[16px] font-medium leading-relaxed text-maroon-950 sm:text-[18px]">
+            <div className="mt-3 flex h-[64px] items-start overflow-hidden sm:h-[60px]">
+              <p
+                key={currentSlide.id + "-sub"}
+                className="max-w-xl text-[15.5px] font-medium leading-relaxed text-maroon-950 sm:text-[17.5px] transition-opacity duration-300 line-clamp-2 sm:line-clamp-3"
+              >
                 {currentSlide.subtitle}
               </p>
             </div>
@@ -384,6 +394,8 @@ function Hero({ onOpenBrand }: { onOpenBrand: (brand: BrandData) => void }) {
             onPrev={prevSlide}
             onSelect={(idx) => setSlideIndex(idx)}
             onOpen={() => onOpenBrand(matchedBrand)}
+            onHoverStart={() => setIsPaused(true)}
+            onHoverEnd={() => setIsPaused(false)}
           />
         </Reveal>
       </div>
@@ -400,6 +412,8 @@ function HeroVisual({
   onPrev,
   onSelect,
   onOpen,
+  onHoverStart,
+  onHoverEnd,
 }: {
   slide: SlideRecord;
   matchedBrand: BrandData;
@@ -409,14 +423,35 @@ function HeroVisual({
   onPrev: () => void;
   onSelect: (index: number) => void;
   onOpen: () => void;
+  onHoverStart?: () => void;
+  onHoverEnd?: () => void;
 }) {
+  const [touchStart, setTouchStart] = useState<number | null>(null);
   const Icon = matchedBrand.icon;
   const foodImg = slide.image_url || matchedBrand.foodImage || matchedBrand.logo;
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStart(e.touches[0].clientX);
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStart === null) return;
+    const diff = touchStart - e.changedTouches[0].clientX;
+    if (diff > 40) onNext();
+    else if (diff < -40) onPrev();
+    setTouchStart(null);
+  };
 
   return (
     <div className="relative mx-auto w-full max-w-md lg:max-w-none">
       {/* Main glass card slider */}
-      <div className="relative rounded-[36px] bg-gradient-to-br from-maroon-900 via-maroon-800 to-maroon-950 p-1 shadow-[0_60px_120px_-30px_rgba(91,20,20,0.55)]">
+      <div
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        onMouseEnter={onHoverStart}
+        onMouseLeave={onHoverEnd}
+        className="relative rounded-[36px] bg-gradient-to-br from-maroon-900 via-maroon-800 to-maroon-950 p-1 shadow-[0_60px_120px_-30px_rgba(91,20,20,0.55)] touch-pan-y select-none"
+      >
         <div className="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-[#1a0a0a] to-[#3a0f10] p-7 sm:p-9">
           {/* Ambient rings */}
           <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-gradient-to-br from-amber-400/30 to-orange-500/10 blur-2xl animate-aurora" />
@@ -446,7 +481,7 @@ function HeroVisual({
             <div className="mt-7 flex items-end justify-between gap-4">
               <div className="min-w-0 flex-1">
                 <div className="text-[13px] font-bold text-amber-200">Featured Concept</div>
-                <div className="flex min-h-[44px] items-center sm:min-h-[50px]">
+                <div className="flex h-[48px] items-center">
                   <div
                     key={slide.id}
                     className="font-display text-3xl font-extrabold text-white sm:text-4xl"
@@ -455,7 +490,7 @@ function HeroVisual({
                     {slide.brand_name}
                   </div>
                 </div>
-                <div className="mt-1.5 flex min-h-[40px] items-start text-[13.5px] font-medium leading-snug text-amber-100/90 line-clamp-2">
+                <div className="mt-1 flex h-[42px] items-start text-[13.5px] font-medium leading-snug text-amber-100/90 line-clamp-2">
                   {slide.subtitle || matchedBrand.tagline}
                 </div>
               </div>
@@ -607,6 +642,8 @@ function SocialProof() {
 
 /* ---------- BRANDS ---------- */
 function Brands({ onOpenBrand }: { onOpenBrand: (brand: BrandData) => void }) {
+  const brandList = BRANDS.filter((b) => b.key !== "fck");
+
   return (
     <section id="brands" className="relative py-20 sm:py-28">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
@@ -630,9 +667,9 @@ function Brands({ onOpenBrand }: { onOpenBrand: (brand: BrandData) => void }) {
         </div>
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-          {BRANDS.map((b, k) => {
+          {brandList.map((b, k) => {
             return (
-              <Reveal key={b.key} delay={k * 80} variant="up">
+              <Reveal key={b.key} delay={k * 80} variant="up" className="h-full">
                 <article className="lift group relative flex h-full flex-col overflow-hidden rounded-3xl border border-maroon-900/15 bg-white p-6 shadow-sm">
                   <div
                     className={`absolute inset-x-0 top-0 h-2 bg-gradient-to-r ${b.accentGradient}`}
@@ -656,26 +693,31 @@ function Brands({ onOpenBrand }: { onOpenBrand: (brand: BrandData) => void }) {
                   </div>
 
                   <h3 className="mt-5 font-display text-2xl font-bold text-maroon-950">{b.name}</h3>
-                  <p className="mt-1 text-[13px] font-bold uppercase tracking-wider text-amber-900">
-                    {b.tagline}
-                  </p>
-                  <p className="mt-3 text-[14.5px] leading-relaxed text-maroon-900 font-medium">{b.short}</p>
+                  <div className="mt-1 flex min-h-[38px] items-center">
+                    <p className="text-[12.5px] font-bold uppercase tracking-wider text-amber-900 leading-snug">
+                      {b.tagline}
+                    </p>
+                  </div>
 
-                  <div className="mt-5 space-y-2 rounded-2xl border border-maroon-900/10 bg-cream-50 p-3 text-[13px]">
-                    <div className="flex justify-between">
+                  <div className="mt-3 flex-1">
+                    <p className="text-[14.5px] leading-relaxed text-maroon-900 font-medium">{b.short}</p>
+                  </div>
+
+                  <div className="mt-auto space-y-2 rounded-2xl border border-maroon-900/10 bg-cream-50 p-3.5 text-[13px]">
+                    <div className="flex items-center justify-between">
                       <span className="font-semibold text-maroon-800">Area Required:</span>
                       <b className="text-maroon-950">{b.space}</b>
                     </div>
-                    <div className="flex justify-between">
+                    <div className="flex items-center justify-between">
                       <span className="font-semibold text-maroon-800">Brand Fee:</span>
                       <b className="text-maroon-950">{b.investment.brandFee}</b>
                     </div>
                   </div>
 
-                  <div className="mt-auto pt-6">
+                  <div className="pt-5">
                     <button
                       onClick={() => onOpenBrand(b)}
-                      className="group/btn inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-br from-amber-500 via-orange-600 to-rose-700 px-5 py-3 text-[14px] font-bold text-white shadow-md shadow-orange-500/20 transition hover:shadow-orange-500/40 hover:-translate-y-0.5"
+                      className="group/btn inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-br from-amber-500 via-orange-600 to-rose-700 px-5 py-3 text-[14px] font-bold text-white shadow-md shadow-orange-500/20 transition hover:shadow-orange-500/40 hover:-translate-y-0.5 cursor-pointer"
                     >
                       <Eye size={16} /> View Details
                     </button>
@@ -1146,7 +1188,6 @@ function FAQ() {
 function LeadCTA({ initialBrand }: { initialBrand?: string }) {
   const [submitted, setSubmitted] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [saveResult, setSaveResult] = useState<SaveResult | null>(null);
   const [saveError, setSaveError] = useState("");
   const [form, setForm] = useState({
     name: "",
@@ -1165,14 +1206,41 @@ function LeadCTA({ initialBrand }: { initialBrand?: string }) {
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
-
-    setSaving(true);
     setSaveError("");
 
+    if (form.name.trim().length < 2) {
+      setSaveError("Please enter a valid full name (letters only).");
+      return;
+    }
+
+    const cleanPhone = form.phone.replace(/\D/g, "");
+    if (cleanPhone.length !== 10) {
+      setSaveError("Please enter a valid 10-digit mobile number (e.g. 9876543210).");
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(form.email.trim())) {
+      setSaveError("Please enter a valid email address (e.g. rahul@example.com).");
+      return;
+    }
+
+    if (form.city.trim().length < 2) {
+      setSaveError("Please enter a valid target city/location.");
+      return;
+    }
+
+    setSaving(true);
+
     try {
-      const result = await saveLead(form);
+      await saveLead({
+        ...form,
+        name: form.name.trim(),
+        phone: cleanPhone,
+        email: form.email.trim(),
+        city: form.city.trim(),
+      });
       setSubmitted(true);
-      setSaveResult(result);
 
       setForm({
         name: "",
@@ -1189,8 +1257,6 @@ function LeadCTA({ initialBrand }: { initialBrand?: string }) {
       setSaving(false);
     }
   };
-    
-
 
   return (
     <section id="lead" className="relative overflow-hidden bg-[#FAEBD6] py-20 sm:py-28 text-maroon-950">
@@ -1265,17 +1331,11 @@ function LeadCTA({ initialBrand }: { initialBrand?: string }) {
                     Enquiry Received!
                   </h3>
                   <p className="mt-2 max-w-sm text-[15.5px] font-semibold text-slate-800">
-                    Thank you <b>{form.name}</b>! Our team will call on <b>{form.phone}</b> to share full details for <b>{form.brand}</b> in {form.city}.
+                    Thank you! Your enquiry has been received.
                   </p>
-                  {saveResult && (
-                    <p className="mt-3 rounded-full bg-emerald-100 px-4 py-2 text-[12px] font-extrabold uppercase tracking-wider text-emerald-800">
-                      Lead captured securely in {saveResult.storage === "mern" ? "MongoDB Backend Database" : saveResult.storage === "supabase" ? "Supabase Database" : "Local Storage"}
-                    </p>
-                  )}
                   <button
                     onClick={() => {
                       setSubmitted(false);
-                      setSaveResult(null);
                       setSaveError("");
                     }}
                     className="mt-6 inline-flex items-center gap-2 rounded-full bg-maroon-950 px-6 py-3 text-[14px] font-bold text-white hover:bg-maroon-900"
@@ -1304,16 +1364,17 @@ function LeadCTA({ initialBrand }: { initialBrand?: string }) {
                       <Field
                         label="Full Name"
                         value={form.name}
-                        onChange={(v) => setForm({ ...form, name: v })}
+                        onChange={(v) => setForm({ ...form, name: v.replace(/[^a-zA-Z\s]/g, "") })}
                         placeholder="e.g. Rohan Sharma"
                         required
                       />
                       <Field
-                        label="Phone Number"
+                        label="Phone Number (10 Digits)"
                         type="tel"
+                        maxLength={10}
                         value={form.phone}
-                        onChange={(v) => setForm({ ...form, phone: v })}
-                        placeholder="+91 93411 27991"
+                        onChange={(v) => setForm({ ...form, phone: v.replace(/\D/g, "").slice(0, 10) })}
+                        placeholder="e.g. 9876543210"
                         required
                       />
                     </div>
@@ -1321,7 +1382,7 @@ function LeadCTA({ initialBrand }: { initialBrand?: string }) {
                       label="Email Address"
                       type="email"
                       value={form.email}
-                      onChange={(v) => setForm({ ...form, email: v })}
+                      onChange={(v) => setForm({ ...form, email: v.trim() })}
                       placeholder="your.email@gmail.com"
                       required
                     />
@@ -1329,7 +1390,7 @@ function LeadCTA({ initialBrand }: { initialBrand?: string }) {
                       <Field
                         label="Target City"
                         value={form.city}
-                        onChange={(v) => setForm({ ...form, city: v })}
+                        onChange={(v) => setForm({ ...form, city: v.replace(/[^a-zA-Z\s,-]/g, "") })}
                         placeholder="e.g. Varanasi / Delhi"
                         required
                       />
@@ -1362,12 +1423,9 @@ function LeadCTA({ initialBrand }: { initialBrand?: string }) {
                       disabled={saving}
                       className="shine group relative mt-3 inline-flex w-full items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-br from-amber-500 via-orange-600 to-rose-700 px-6 py-4 text-[16px] font-extrabold text-white shadow-xl shadow-orange-500/35 transition-transform hover:-translate-y-0.5 active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-70"
                     >
-                      {saving ? "Saving Lead Securely..." : "Request Official Proposal"}
+                      {saving ? "Submitting..." : "Submit"}
                       <ArrowRight size={18} className="transition-transform group-hover:translate-x-1" />
                     </button>
-                    <p className="text-center text-[12px] font-bold text-slate-600">
-                      🔒 Lead storage: {DATABASE_MODE === "mern" ? "Live MERN & MongoDB Atlas Database" : "local demo database fallback"}
-                    </p>
                   </form>
                 </>
               )}
@@ -1386,6 +1444,7 @@ function Field({
   placeholder,
   type = "text",
   required,
+  maxLength,
 }: {
   label: string;
   value: string;
@@ -1393,6 +1452,7 @@ function Field({
   placeholder?: string;
   type?: string;
   required?: boolean;
+  maxLength?: number;
 }) {
   return (
     <label className="block">
@@ -1402,6 +1462,7 @@ function Field({
       <input
         type={type}
         required={required}
+        maxLength={maxLength}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}

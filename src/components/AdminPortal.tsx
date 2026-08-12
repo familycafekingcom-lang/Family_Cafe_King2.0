@@ -4,7 +4,6 @@ import {
   Calendar,
   CheckCircle2,
   Clock,
-  Crown,
   Download,
   Edit3,
   Filter,
@@ -17,8 +16,8 @@ import {
   Phone,
   Plus,
   RefreshCw,
+  RotateCcw,
   Search,
-  ShieldCheck,
   Sliders,
   Sparkles,
   Sun,
@@ -40,18 +39,17 @@ import {
   deleteLead,
   deleteSlide,
   getVisitorStats,
-  leadsToCsv,
   listBookings,
   listLaunches,
   listLeads,
   listSlides,
   saveLaunch,
   saveSlide,
+  seedDefaultSlides,
   signInAdmin,
   updateLaunch,
   updateLead,
   updateSlide,
-  type BookingRecord,
   type LaunchRecord,
   type LeadRecord,
   type LeadStatus,
@@ -59,9 +57,7 @@ import {
   type VisitorStats,
 } from "../lib/database";
 import {
-  apiDeleteBooking,
   apiDeleteContact,
-  apiGetBookings,
   apiGetContacts,
   checkBackendHealth,
   type MernBooking,
@@ -265,10 +261,7 @@ export function AdminPortal() {
     [leads, launches, slides, bookings, contacts]
   );
 
-  const fillDefaultCredentials = () => {
-    setEmail("familycafeking.com@gmail.com");
-    setPassword("Admin@FCK2026");
-  };
+
 
   const login = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -444,6 +437,17 @@ export function AdminPortal() {
     }
   };
 
+  const handleResetDefaultSlides = async () => {
+    if (!window.confirm("Restore all 5 default brand slides (Family Cafe King, Chai, Paan, Shake & Lassi)?")) return;
+    try {
+      const fresh = await seedDefaultSlides(session?.accessToken);
+      setSlides(fresh);
+      alert("Successfully restored all 5 brand hero slides!");
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to restore slides");
+    }
+  };
+
   const removeLaunch = async (id: string) => {
     if (!session || !window.confirm("Delete this upcoming launch card?")) return;
     await deleteLaunch(id, session.accessToken);
@@ -513,16 +517,7 @@ export function AdminPortal() {
             </div>
           </div>
 
-          {/* Connection status indicator */}
-          <div className={`mt-6 flex items-center justify-between rounded-xl border px-4 py-2.5 text-xs font-semibold ${
-            isNight ? "border-slate-800 bg-slate-950/60" : "border-amber-200 bg-amber-50/60"
-          }`}>
-            <span className={isNight ? "text-slate-400" : "text-amber-900/80"}>Backend System</span>
-            <span className="inline-flex items-center gap-2 font-bold">
-              <span className={`h-2.5 w-2.5 rounded-full ${isMernOnline ? "bg-emerald-500 animate-pulse" : "bg-amber-500"}`} />
-              {isMernOnline ? "MERN Express (Online)" : "Local / Offline Mode"}
-            </span>
-          </div>
+
 
           <form onSubmit={login} className="mt-6 space-y-4">
             <AdminField
@@ -544,18 +539,7 @@ export function AdminPortal() {
               isNight={isNight}
             />
 
-            <div className="flex flex-col gap-1 text-xs">
-              <button
-                type="button"
-                onClick={fillDefaultCredentials}
-                className="text-left text-amber-500 hover:underline font-bold"
-              >
-                Auto-fill default admin credentials
-              </button>
-              <span className={`text-[11px] ${isNight ? "text-slate-400" : "text-amber-900/70"}`}>
-                Default: <code className="text-amber-500 font-mono font-bold">familycafeking.com@gmail.com</code> / <code className="text-amber-500 font-mono font-bold">Admin@FCK2026</code>
-              </span>
-            </div>
+
 
             {authError && (
               <p className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-xs font-bold text-rose-400">
@@ -1115,6 +1099,13 @@ export function AdminPortal() {
                   Configure hero headlines, brand highlights, background images, investment prices, & CTAs rendered live in frontend Hero section.
                 </p>
               </div>
+              <button
+                type="button"
+                onClick={() => void handleResetDefaultSlides()}
+                className="inline-flex items-center gap-2 rounded-2xl border border-amber-500/40 bg-amber-500/15 px-4 py-2.5 text-xs font-black text-amber-500 transition hover:bg-amber-500/25 shadow-md"
+              >
+                <RotateCcw size={15} /> Restore All 5 Brand Slides
+              </button>
             </div>
 
             {/* Add Slide Form */}
@@ -1291,7 +1282,7 @@ export function AdminPortal() {
                 }`}>
                   <div className="space-y-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <h3 className={`font-bold text-base ${isNight ? "text-white" : "text-slate-900"}`}>{b.name}</h3>
+                      <h3 className={`font-bold text-base capitalize ${isNight ? "text-white" : "text-slate-900"}`}>{b.name || "Territory Applicant"}</h3>
                       <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-0.5 text-xs font-bold text-amber-500">
                         📞 {b.phone}
                       </span>
@@ -1301,18 +1292,16 @@ export function AdminPortal() {
                     <p className={`text-xs font-semibold ${isNight ? "text-slate-300" : "text-amber-900/90"}`}>
                       Brand: <span className="text-amber-500 font-extrabold">{b.brand || "Family Cafe King"}</span>
                       {(b as any).city && <> · City: <span className="font-extrabold text-emerald-400">{(b as any).city}</span></>}
-                      {(b as any).budget && <> · Budget: <span className="font-extrabold text-sky-400">{(b as any).budget}</span></>}
+                      <> · Budget: <span className="font-extrabold text-sky-400">{(b as any).budget || "Not Specified"}</span></>
                       {b.date && <> · Date: {b.date}</>}
                       {b.time && <> · Time: {b.time}</>}
                     </p>
 
-                    {b.notes && (
-                      <p className={`mt-2 text-xs italic p-2.5 rounded-xl border ${
-                        isNight ? "bg-slate-900 border-slate-800 text-amber-300" : "bg-amber-50 border-amber-200 text-amber-950 font-medium"
-                      }`}>
-                        "{b.notes}"
-                      </p>
-                    )}
+                    <p className={`mt-2 text-xs italic p-2.5 rounded-xl border ${
+                      isNight ? "bg-slate-900 border-slate-800 text-amber-300" : "bg-amber-50 border-amber-200 text-amber-950 font-medium"
+                    }`}>
+                      "{b.notes || `City Territory Booking Request for ${(b as any).city || "City"}`}"
+                    </p>
                   </div>
                   <button
                     onClick={() => void removeBooking((b._id || b.id)!)}

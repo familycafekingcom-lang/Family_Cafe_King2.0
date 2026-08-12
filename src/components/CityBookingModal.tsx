@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { X, MapPin, Sparkles, Check, Loader2, ArrowRight } from "lucide-react";
 import { BRANDS } from "../data";
-import { saveBooking, saveLead, type SaveResult } from "../lib/database";
+import { saveBooking, saveLead } from "../lib/database";
 
 interface CityBookingModalProps {
   isOpen: boolean;
@@ -23,7 +23,6 @@ export function CityBookingModal({ isOpen, initialCity = "", initialBrand = "", 
 
   const [saving, setSaving] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const [saveResult, setSaveResult] = useState<SaveResult | null>(null);
   const [saveError, setSaveError] = useState("");
 
   useEffect(() => {
@@ -52,32 +51,51 @@ export function CityBookingModal({ isOpen, initialCity = "", initialBrand = "", 
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    setSaving(true);
     setSaveError("");
 
+    if (form.name.trim().length < 2) {
+      setSaveError("Please enter a valid full name.");
+      return;
+    }
+    const cleanPhone = form.phone.replace(/\D/g, "");
+    if (cleanPhone.length !== 10) {
+      setSaveError("Please enter a valid 10-digit mobile number (e.g. 9876543210).");
+      return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(form.email.trim())) {
+      setSaveError("Please enter a valid email address (e.g. rahul@example.com).");
+      return;
+    }
+    if (form.city.trim().length < 2) {
+      setSaveError("Please enter a valid city or location name.");
+      return;
+    }
+
+    setSaving(true);
+
     try {
-      const [bResult, lResult] = await Promise.all([
+      await Promise.all([
         saveBooking({
-          name: form.name,
-          phone: form.phone,
-          email: form.email,
-          city: form.city,
+          name: form.name.trim(),
+          phone: cleanPhone,
+          email: form.email.trim(),
+          city: form.city.trim(),
           brand: form.brand,
           budget: form.budget,
           notes: form.notes ? `City Territory Booking for ${form.city}: ${form.notes}` : `City Territory Booking Request for ${form.city}`,
         }),
         saveLead({
-          name: form.name,
-          phone: form.phone,
-          email: form.email,
-          city: form.city || "City Booking",
+          name: form.name.trim(),
+          phone: cleanPhone,
+          email: form.email.trim(),
+          city: form.city.trim() || "City Booking",
           brand: form.brand,
           budget: form.budget,
         }),
       ]);
 
       setSubmitted(true);
-      setSaveResult(lResult);
     } catch (err: any) {
       setSaveError(err?.message || "Failed to submit city booking. Please try again.");
     } finally {
@@ -87,7 +105,6 @@ export function CityBookingModal({ isOpen, initialCity = "", initialBrand = "", 
 
   const handleReset = () => {
     setSubmitted(false);
-    setSaveResult(null);
     setSaveError("");
     setForm({
       name: "",
@@ -150,13 +167,8 @@ export function CityBookingModal({ isOpen, initialCity = "", initialBrand = "", 
                 City Booking Reserved!
               </h3>
               <p className="mt-2 max-w-md text-[15px] font-semibold text-slate-800 leading-relaxed">
-                Thank you <b>{form.name}</b>! Territory booking request for <b>{form.city || "your city"}</b> ({form.brand}) has been received. Our expansion manager will contact you at <b>{form.phone}</b>.
+                Thank you! Territory booking request has been received.
               </p>
-              {saveResult && (
-                <p className="mt-4 rounded-full bg-emerald-100 px-4 py-2 text-[12px] font-extrabold uppercase tracking-wider text-emerald-800">
-                  Saved securely in {saveResult.storage === "mern" ? "MongoDB Backend Database" : "Local Storage"} & Live in Admin CRM
-                </p>
-              )}
               <div className="mt-7 flex flex-wrap justify-center gap-3">
                 <button
                   onClick={handleReset}
@@ -196,7 +208,10 @@ export function CityBookingModal({ isOpen, initialCity = "", initialBrand = "", 
                     type="text"
                     required
                     value={form.name}
-                    onChange={(e) => setForm({ ...form, name: e.target.value })}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/[^a-zA-Z\s]/g, "");
+                      setForm({ ...form, name: val });
+                    }}
                     placeholder="e.g. Rahul Sharma"
                     className="w-full rounded-xl border border-maroon-900/20 bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 placeholder:text-slate-400 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
                   />
@@ -204,14 +219,18 @@ export function CityBookingModal({ isOpen, initialCity = "", initialBrand = "", 
 
                 <div>
                   <label className="mb-1 block text-xs font-extrabold uppercase tracking-wider text-maroon-950">
-                    Phone Number *
+                    Phone Number * (10 Digits)
                   </label>
                   <input
                     type="tel"
                     required
+                    maxLength={10}
                     value={form.phone}
-                    onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                    placeholder="+91 93411 27991"
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/\D/g, "").slice(0, 10);
+                      setForm({ ...form, phone: val });
+                    }}
+                    placeholder="e.g. 9876543210"
                     className="w-full rounded-xl border border-maroon-900/20 bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 placeholder:text-slate-400 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
                   />
                 </div>
@@ -226,7 +245,7 @@ export function CityBookingModal({ isOpen, initialCity = "", initialBrand = "", 
                     type="email"
                     required
                     value={form.email}
-                    onChange={(e) => setForm({ ...form, email: e.target.value })}
+                    onChange={(e) => setForm({ ...form, email: e.target.value.trim() })}
                     placeholder="rahul@example.com"
                     className="w-full rounded-xl border border-maroon-900/20 bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 placeholder:text-slate-400 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
                   />
@@ -241,7 +260,10 @@ export function CityBookingModal({ isOpen, initialCity = "", initialBrand = "", 
                       type="text"
                       required
                       value={form.city}
-                      onChange={(e) => setForm({ ...form, city: e.target.value })}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/[^a-zA-Z\s,-]/g, "");
+                        setForm({ ...form, city: val });
+                      }}
                       placeholder="e.g. Lucknow, Varanasi, Jaipur"
                       className="w-full rounded-xl border border-maroon-900/20 bg-white pl-9 pr-4 py-2.5 text-sm font-semibold text-slate-900 placeholder:text-slate-400 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
                     />
