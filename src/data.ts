@@ -380,7 +380,7 @@ export const BRANDS: BrandData[] = [
     long:
       "Lassi King — Experience authentic Punjabi lassi crafted from thick fresh curd, topped with rich malai, dry fruits, and natural fruit blends. Refreshment loved by all ages.",
     icon: Milk,
-    logo: "/images/lassi-king-logo.jpg",
+    logo: "/images/lassi-king-logo.png",
     foodImage: "/images/lassi-king-food.png",
     accentGradient: "from-yellow-400 via-amber-500 to-orange-700",
     chipBg: "bg-yellow-100",
