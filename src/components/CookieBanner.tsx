@@ -10,15 +10,9 @@ export function CookieBanner({ onOpenPrivacy }: CookieConsentProps) {
   const [show, setShow] = useState(false);
 
   useEffect(() => {
-    try {
-      const consent = localStorage.getItem("fck_cookie_consent_v1");
-      if (!consent) {
-        const timer = setTimeout(() => setShow(true), 800);
-        return () => clearTimeout(timer);
-      }
-    } catch {
-      setShow(true);
-    }
+    // Show banner smoothly on load
+    const timer = setTimeout(() => setShow(true), 400);
+    return () => clearTimeout(timer);
   }, []);
 
   const detectDeviceInfo = () => {
