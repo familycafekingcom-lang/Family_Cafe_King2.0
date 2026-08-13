@@ -26,6 +26,7 @@ import { Reveal } from "./components/Reveal";
 import { BrandModal } from "./components/BrandModal";
 import { LegalModal } from "./components/LegalModal";
 import { CookieBanner } from "./components/CookieBanner";
+import { StaffTrainingModal } from "./components/StaffTrainingModal";
 import { CityBookingModal } from "./components/CityBookingModal";
 import { UpcomingLaunches } from "./components/UpcomingLaunches";
 import { AdminPortal } from "./components/AdminPortal";
@@ -991,7 +992,7 @@ function Benefits() {
 
 
 /* ---------- STAFF TRAINING & SUPPORT ---------- */
-function StaffTraining() {
+function StaffTraining({ onOpenDetails }: { onOpenDetails: () => void }) {
   return (
     <section id="training" className="relative overflow-hidden bg-gradient-to-b from-cream-50 via-amber-50/50 to-cream-50 py-20 sm:py-28">
       <div className="pointer-events-none absolute inset-0 -z-10 opacity-30 bg-grain" />
@@ -1042,9 +1043,15 @@ function StaffTraining() {
                   ))}
                 </div>
               </div>
-              <p className="mt-6 border-t border-maroon-900/10 pt-4 text-[13px] font-semibold text-maroon-900/80">
-                Full master recipes, ingredient standardisation &amp; SOPs included.
-              </p>
+              <div className="mt-6 border-t border-maroon-900/10 pt-4">
+                <button
+                  type="button"
+                  onClick={onOpenDetails}
+                  className="group/btn inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-br from-amber-500 via-orange-600 to-rose-700 px-5 py-3 text-[14px] font-bold text-white shadow-md shadow-orange-500/20 transition hover:shadow-orange-500/40 hover:-translate-y-0.5 cursor-pointer"
+                >
+                  <Eye size={16} /> View Details
+                </button>
+              </div>
             </div>
           </Reveal>
 
@@ -1070,9 +1077,13 @@ function StaffTraining() {
                 </div>
               </div>
               <div className="mt-6 border-t border-maroon-900/10 pt-4">
-                <span className="inline-flex items-center gap-1.5 text-[13px] font-extrabold text-emerald-700">
-                  <Sparkles size={14} /> Full On-Site Kitchen Training
-                </span>
+                <button
+                  type="button"
+                  onClick={onOpenDetails}
+                  className="group/btn inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-br from-amber-500 via-orange-600 to-rose-700 px-5 py-3 text-[14px] font-bold text-white shadow-md shadow-orange-500/20 transition hover:shadow-orange-500/40 hover:-translate-y-0.5 cursor-pointer"
+                >
+                  <Eye size={16} /> View Details
+                </button>
               </div>
             </div>
           </Reveal>
@@ -1106,12 +1117,13 @@ function StaffTraining() {
                 </div>
               </div>
               <div className="mt-6 border-t border-maroon-900/10 pt-4">
-                <a
-                  href="#lead"
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-amber-500 via-orange-600 to-rose-700 px-5 py-3.5 text-[14px] font-extrabold text-white shadow-lg shadow-orange-500/25 transition hover:brightness-110"
+                <button
+                  type="button"
+                  onClick={onOpenDetails}
+                  className="group/btn inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-br from-amber-500 via-orange-600 to-rose-700 px-5 py-3 text-[14px] font-bold text-white shadow-md shadow-orange-500/20 transition hover:shadow-orange-500/40 hover:-translate-y-0.5 cursor-pointer"
                 >
-                  Book Staff Training <ArrowRight size={15} />
-                </a>
+                  <Eye size={16} /> View Details
+                </button>
               </div>
             </div>
           </Reveal>
@@ -1927,6 +1939,7 @@ function WhatsAppChatButton() {
 /* ---------- MAIN APP ---------- */
 export default function App() {
   const [selectedBrand, setSelectedBrand] = useState<BrandData | null>(null);
+  const [trainingModalOpen, setTrainingModalOpen] = useState(false);
   const [leadBrand, setLeadBrand] = useState<string | undefined>(undefined);
   const [legalType, setLegalType] = useState<"privacy" | "terms" | null>(null);
   const [cityBookingState, setCityBookingState] = useState<{
@@ -1983,7 +1996,7 @@ export default function App() {
         <Features />
         <Showcase onOpenBrand={handleOpenBrand} />
         <Benefits />
-        <StaffTraining />
+        <StaffTraining onOpenDetails={() => setTrainingModalOpen(true)} />
         <Testimonials />
         <Pricing />
         <FAQ />
@@ -2000,6 +2013,12 @@ export default function App() {
         brand={selectedBrand}
         onClose={() => setSelectedBrand(null)}
         onSelectLead={handleSelectLeadFromModal}
+      />
+
+      {/* Staff Training Details Deck Modal */}
+      <StaffTrainingModal
+        isOpen={trainingModalOpen}
+        onClose={() => setTrainingModalOpen(false)}
       />
 
       {/* Privacy Policy & Terms Modal */}
