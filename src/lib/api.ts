@@ -120,24 +120,35 @@ const getHeaders = (token?: string, isJson = true): HeadersInit => {
 
 let healthCache: { healthy: boolean; timestamp: number } | null = null;
 
-// Check if Express backend is running (with caching & fast 1.2s timeout)
+// Check if Express backend is running (tries Render production backend & local backend fallback)
 export async function checkBackendHealth(): Promise<boolean> {
   const now = Date.now();
   if (healthCache && now - healthCache.timestamp < 5000) {
     return healthCache.healthy;
   }
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 1200);
-    const res = await fetch(`${API_BASE}/health`, { signal: controller.signal });
-    clearTimeout(timeoutId);
-    const healthy = res.ok;
-    healthCache = { healthy, timestamp: now };
-    return healthy;
-  } catch {
-    healthCache = { healthy: false, timestamp: now };
-    return false;
+
+  const urlsToTry = [
+    `${API_BASE}/health`,
+    "http://localhost:5000/api/health",
+  ];
+
+  for (const url of urlsToTry) {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 2500);
+      const res = await fetch(url, { signal: controller.signal });
+      clearTimeout(timeoutId);
+      if (res.ok) {
+        healthCache = { healthy: true, timestamp: now };
+        return true;
+      }
+    } catch {
+      // Try next
+    }
   }
+
+  healthCache = { healthy: false, timestamp: now };
+  return false;
 }
 
 // ================= ADMIN AUTH =================
