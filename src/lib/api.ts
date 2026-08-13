@@ -118,15 +118,24 @@ const getHeaders = (token?: string, isJson = true): HeadersInit => {
   return headers;
 };
 
-// Check if Express backend is running
+let healthCache: { healthy: boolean; timestamp: number } | null = null;
+
+// Check if Express backend is running (with caching & fast 1.2s timeout)
 export async function checkBackendHealth(): Promise<boolean> {
+  const now = Date.now();
+  if (healthCache && now - healthCache.timestamp < 5000) {
+    return healthCache.healthy;
+  }
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 3000);
+    const timeoutId = setTimeout(() => controller.abort(), 1200);
     const res = await fetch(`${API_BASE}/health`, { signal: controller.signal });
     clearTimeout(timeoutId);
-    return res.ok;
+    const healthy = res.ok;
+    healthCache = { healthy, timestamp: now };
+    return healthy;
   } catch {
+    healthCache = { healthy: false, timestamp: now };
     return false;
   }
 }
@@ -426,4 +435,71 @@ export async function apiDeleteContact(id: string, token?: string): Promise<void
   if (!res.ok || !data.success) {
     throw new Error(data.message || "Failed to delete contact inquiry");
   }
+}
+
+// ================= TRAINING API =================
+export interface MernTraining {
+  _id?: string;
+  id?: string;
+  heading: string;
+  sub_heading: string;
+  food_categories: string[];
+  time_period: string;
+  base_cost: string;
+  extra_costs: string[];
+  is_active: boolean;
+  order: number;
+  createdAt?: string;
+  created_at?: string;
+}
+
+export async function apiGetTraining(): Promise<MernTraining[]> {
+  const res = await fetch(`${API_BASE}/training`, { headers: getHeaders() });
+  const data = await res.json();
+  if (!res.ok || !data.success) throw new Error(data.message || "Failed to fetch training");
+  return (data.data || []).map((item: MernTraining) => ({
+    ...item,
+    id: item._id || item.id,
+    created_at: item.createdAt || item.created_at || new Date().toISOString(),
+  }));
+}
+
+export async function apiCreateTraining(
+  payload: Omit<MernTraining, "_id" | "id">,
+  token?: string
+): Promise<MernTraining> {
+  const res = await fetch(`${API_BASE}/training`, {
+    method: "POST",
+    headers: getHeaders(token),
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json();
+  if (!res.ok || !data.success) throw new Error(data.message || "Failed to create training package");
+  const item = data.data;
+  return { ...item, id: item._id || item.id, created_at: item.createdAt || new Date().toISOString() };
+}
+
+export async function apiUpdateTraining(
+  id: string,
+  updates: Partial<MernTraining>,
+  token?: string
+): Promise<MernTraining> {
+  const res = await fetch(`${API_BASE}/training/${id}`, {
+    method: "PUT",
+    headers: getHeaders(token),
+    body: JSON.stringify(updates),
+  });
+  const data = await res.json();
+  if (!res.ok || !data.success) throw new Error(data.message || "Failed to update training package");
+  const item = data.data;
+  return { ...item, id: item._id || item.id, created_at: item.createdAt || new Date().toISOString() };
+}
+
+export async function apiDeleteTraining(id: string, token?: string): Promise<void> {
+  const res = await fetch(`${API_BASE}/training/${id}`, {
+    method: "DELETE",
+    headers: getHeaders(token),
+  });
+  const data = await res.json();
+  if (!res.ok || !data.success) throw new Error(data.message || "Failed to delete training package");
 }

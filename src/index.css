@@ -196,12 +196,11 @@ body {
 
 /* Ticker underline for words */
 @keyframes wordFlip {
-  0% { opacity: 0; transform: translateY(14px) rotateX(-40deg); }
-  15% { opacity: 1; transform: translateY(0) rotateX(0); }
-  85% { opacity: 1; transform: translateY(0) rotateX(0); }
-  100% { opacity: 0; transform: translateY(-14px) rotateX(40deg); }
+  0% { opacity: 0; transform: translateY(10px); }
+  20% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 1; transform: translateY(0); }
 }
-.word-flip { display: inline-block; animation: wordFlip 2.8s ease-in-out; transform-origin: center; }
+.word-flip { display: inline-block; animation: wordFlip 0.4s ease-out; transform-origin: center; }
 
 /* SVG swoosh path */
 @keyframes drawStroke {

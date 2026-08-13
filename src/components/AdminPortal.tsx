@@ -32,6 +32,7 @@ import {
 } from "lucide-react";
 import {
   allRequestsToCsv,
+  clearAllDemoLeads,
   DEFAULT_SLIDES,
   DEFAULT_UPCOMING,
   deleteBookingRecord,
@@ -179,28 +180,31 @@ export function AdminPortal() {
     if (!session) return;
     setDataLoading(true);
     setDataError("");
+
+    // Quick initial render with local stats
+    setVisitorStats(getVisitorStats());
+    void checkHealth();
+
     try {
-      setVisitorStats(getVisitorStats());
-      await checkHealth();
+      // Parallel non-blocking fetches
       const [leadRows, launchRows, slideRows] = await Promise.all([
-        listLeads(session.accessToken),
-        listLaunches(session.accessToken),
-        listSlides(session.accessToken),
+        listLeads(session.accessToken).catch(() => []),
+        listLaunches(session.accessToken).catch(() => []),
+        listSlides(session.accessToken).catch(() => []),
       ]);
+
       setLeads(leadRows);
       setLaunches(launchRows);
       setSlides(slideRows);
 
-      try {
-        const [bookingRows, contactRows] = await Promise.all([
-          listBookings(session.accessToken),
-          apiGetContacts(session.accessToken),
-        ]);
+      // Async fetch remaining non-critical items
+      Promise.all([
+        listBookings(session.accessToken).catch(() => []),
+        apiGetContacts(session.accessToken).catch(() => []),
+      ]).then(([bookingRows, contactRows]) => {
         setBookings(bookingRows as MernBooking[]);
         setContacts(contactRows);
-      } catch {
-        // Non-fatal if bookings/contacts endpoints are empty
-      }
+      });
     } catch (error) {
       setDataError(error instanceof Error ? error.message : "Unable to load dashboard data");
     } finally {
@@ -469,13 +473,13 @@ export function AdminPortal() {
     return (
       <main className={`grid min-h-screen place-items-center px-4 py-12 font-sans transition-colors duration-300 ${
         isNight
-          ? "bg-[#0d0708] text-slate-100 selection:bg-amber-500 selection:text-black"
-          : "bg-gradient-to-br from-amber-50 via-orange-50/50 to-amber-100/80 text-slate-900 selection:bg-amber-400 selection:text-slate-900"
+          ? "bg-[#140a0b] text-slate-100 selection:bg-amber-500 selection:text-black"
+          : "bg-[#faf5ea] text-slate-900 selection:bg-amber-400 selection:text-slate-900"
       }`}>
         <div className={`w-full max-w-md rounded-3xl border p-8 shadow-2xl backdrop-blur-2xl transition-colors duration-300 ${
           isNight
-            ? "border-amber-500/20 bg-slate-900/90"
-            : "border-amber-200/80 bg-white/95 text-slate-900 shadow-amber-950/10"
+            ? "border-amber-500/30 bg-[#1f0e10] text-slate-100"
+            : "border-amber-300 bg-white text-slate-900 shadow-xl"
         }`}>
           <div className="mb-6 flex items-center justify-between">
             <a href="#top" className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-amber-500 hover:text-amber-400">
@@ -539,7 +543,23 @@ export function AdminPortal() {
               isNight={isNight}
             />
 
-
+            {/* Auto fill quick shortcut for testing/admin access */}
+            <div className="flex flex-wrap gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => {
+                  setEmail("familycafeking.com@gmail.com");
+                  setPassword("Admin@FCK2026");
+                }}
+                className={`rounded-xl border px-3 py-1.5 text-[11px] font-bold transition ${
+                  isNight
+                    ? "border-amber-500/40 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20"
+                    : "border-amber-300 bg-amber-100/80 text-amber-950 hover:bg-amber-200"
+                }`}
+              >
+                ⚡ Auto-Fill Credentials
+              </button>
+            </div>
 
             {authError && (
               <p className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-xs font-bold text-rose-400">
@@ -620,6 +640,22 @@ export function AdminPortal() {
             >
               Live Site
             </a>
+            <button
+              onClick={async () => {
+                if (!window.confirm("Are you sure you want to reset and clear all saved demo leads & bookings?")) return;
+                try {
+                  await clearAllDemoLeads(session?.accessToken, leads, bookings as any);
+                  setLeads([]);
+                  setBookings([]);
+                  alert("Successfully reset all saved demo leads & territory requests!");
+                } catch (err) {
+                  alert(err instanceof Error ? err.message : "Failed to reset demo leads");
+                }
+              }}
+              className="inline-flex items-center gap-2 rounded-xl border border-orange-500/40 bg-orange-500/10 px-4 py-2 text-xs font-bold text-orange-400 hover:bg-orange-500/20"
+            >
+              <RotateCcw size={14} /> Reset Demo Leads
+            </button>
             <button
               onClick={() => void loadData()}
               className="inline-flex items-center gap-2 rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-2 text-xs font-bold text-amber-500 hover:bg-amber-500/20"

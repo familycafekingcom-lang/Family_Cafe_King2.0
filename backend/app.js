@@ -13,6 +13,7 @@ const contactroutes = require("./routes/contactroutes");
 const adminroutes = require("./routes/adminroutes");
 const launchroutes = require("./routes/launchroutes");
 const sliderroutes = require("./routes/sliderroutes");
+const trainingroutes = require("./routes/trainingroutes");
 
 const app = express();
 
@@ -50,6 +51,7 @@ app.use("/api/contacts", contactroutes);
 app.use("/api/admin", adminroutes);
 app.use("/api/launches", launchroutes);
 app.use("/api/slides", sliderroutes);
+app.use("/api/training", trainingroutes);
 
 // 404
 app.use((req, res) => {

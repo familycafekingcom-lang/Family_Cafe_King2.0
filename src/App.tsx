@@ -14,7 +14,7 @@ import {
   Sparkles,
   Crown,
   Award,
-  TrendingUp, 
+  TrendingUp,
   ArrowUpRight,
   Plus,
   Minus,
@@ -25,6 +25,7 @@ import {
 import { Reveal } from "./components/Reveal";
 import { BrandModal } from "./components/BrandModal";
 import { LegalModal } from "./components/LegalModal";
+import { CookieBanner } from "./components/CookieBanner";
 import { CityBookingModal } from "./components/CityBookingModal";
 import { UpcomingLaunches } from "./components/UpcomingLaunches";
 import { AdminPortal } from "./components/AdminPortal";
@@ -101,13 +102,13 @@ function Nav() {
 
   return (
     <header
-      className={`fixed inset-x-0 top-0 z-50 transition-all duration-500 ${
-        scrolled
-          ? "backdrop-blur-xl bg-cream-50/90 border-b border-maroon-900/15 shadow-[0_10px_40px_-20px_rgba(91,20,20,0.3)]"
-          : "bg-transparent"
+      className={`fixed inset-x-0 top-0 z-50 transition-all duration-500 ${scrolled
+        ? "backdrop-blur-xl bg-cream-50/90 border-b border-maroon-900/15 shadow-[0_10px_40px_-20px_rgba(91,20,20,0.3)]"
+        : "bg-transparent"
       }`}
     >
       <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-3 sm:px-8 sm:py-4">
+        {/* Logo */}
         <a href="#top" className="flex items-center gap-2.5 group">
           <span className="relative grid h-11 w-11 flex-shrink-0 place-items-center overflow-hidden rounded-xl border border-maroon-900/15 bg-white p-1 shadow-md transition-transform group-hover:scale-105">
             <img
@@ -129,6 +130,7 @@ function Nav() {
           </div>
         </a>
 
+        {/* Desktop nav links */}
         <nav className="hidden items-center gap-1 lg:flex">
           {links.map((l) => (
             <a
@@ -141,6 +143,7 @@ function Nav() {
           ))}
         </nav>
 
+        {/* Desktop right actions */}
         <div className="hidden items-center gap-2.5 lg:flex">
           <a
             href={`tel:${CONTACT_PHONE.replace(/\s/g, "")}`}
@@ -159,21 +162,31 @@ function Nav() {
           </a>
         </div>
 
-        <button
-          aria-label="Toggle menu"
-          aria-expanded={open}
-          onClick={() => setOpen((o) => !o)}
-          className="grid h-10 w-10 place-items-center rounded-xl border border-maroon-900/20 bg-white/80 backdrop-blur lg:hidden text-maroon-950"
-        >
-          {open ? <X size={20} /> : <Menu size={20} />}
-        </button>
+        {/* Mobile right: WhatsApp icon + Hamburger */}
+        <div className="flex items-center gap-2 lg:hidden">
+          <a
+            href={waLink("Family Cafe King Group")}
+            target="_blank"
+            rel="noreferrer"
+            aria-label="Chat on WhatsApp"
+            className="grid h-9 w-9 place-items-center rounded-xl bg-emerald-600 text-white shadow-md transition hover:bg-emerald-500"
+          >
+            <WhatsApp size={18} />
+          </a>
+          <button
+            aria-label="Toggle menu"
+            aria-expanded={open}
+            onClick={() => setOpen((o) => !o)}
+            className="grid h-9 w-9 place-items-center rounded-xl border border-maroon-900/20 bg-white/80 backdrop-blur text-maroon-950"
+          >
+            {open ? <X size={18} /> : <Menu size={18} />}
+          </button>
+        </div>
       </div>
 
-      {/* Mobile menu */}
+      {/* Mobile dropdown menu */}
       <div
-        className={`lg:hidden overflow-hidden transition-[max-height] duration-500 ease-out ${
-          open ? "max-h-[80vh]" : "max-h-0"
-        }`}
+        className={`lg:hidden overflow-hidden transition-[max-height] duration-500 ease-out ${open ? "max-h-[80vh]" : "max-h-0"}`}
       >
         <div className="mx-4 mb-4 rounded-2xl border border-maroon-900/15 bg-cream-50/98 p-3 backdrop-blur-xl shadow-2xl">
           <div className="flex flex-col">
@@ -260,7 +273,7 @@ function Hero({ onOpenBrand }: { onOpenBrand: (brand: BrandData) => void }) {
   return (
     <section
       id="top"
-      className="relative overflow-hidden pt-28 pb-20 sm:pt-36 sm:pb-28 lg:pt-40"
+      className="relative overflow-hidden pt-20 pb-10 sm:pt-28 sm:pb-16 lg:pt-40 lg:pb-28"
     >
       {/* Ambient background */}
       <div className="radial-warm absolute inset-0 -z-10" />
@@ -286,105 +299,9 @@ function Hero({ onOpenBrand }: { onOpenBrand: (brand: BrandData) => void }) {
         })}
       </svg>
 
-      <div className="mx-auto grid max-w-7xl grid-cols-1 items-center gap-14 px-5 sm:px-8 lg:grid-cols-[1.05fr_0.95fr] lg:gap-16">
-        {/* LEFT copy */}
-        <div>
-          <Reveal>
-            <div className="flex h-8 items-center">
-              <span className="inline-flex items-center gap-2 rounded-full border border-maroon-900/20 bg-white/80 px-4 py-1.5 text-[12px] font-bold uppercase tracking-[0.14em] text-maroon-950 backdrop-blur shadow-2xs">
-                <span className="relative flex h-2.5 w-2.5">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500 opacity-75" />
-                  <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-600" />
-                </span>
-                {currentSlide.badge_text || "350+ Franchises All Over India"}
-              </span>
-            </div>
-          </Reveal>
-
-          <Reveal delay={80}>
-            <div className="mt-4 flex h-[120px] items-start overflow-hidden sm:h-[150px] lg:h-[175px]">
-              <h1
-                key={currentSlide.id + "-title"}
-                className="font-display text-[32px] font-bold leading-[1.1] tracking-tight text-maroon-950 sm:text-[46px] sm:leading-[1.08] lg:text-[54px] lg:leading-[1.06] transition-opacity duration-300"
-              >
-                {currentSlide.title}
-              </h1>
-            </div>
-          </Reveal>
-
-          <Reveal delay={160}>
-            <div className="mt-2 flex h-10 items-center">
-              <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 text-[19px] sm:text-[22px]">
-                <span className="font-bold text-maroon-950">Featured Brand:</span>
-                <span className="relative inline-flex h-9 items-baseline overflow-hidden sm:h-10">
-                  <span
-                    key={currentSlide.id + "-brand"}
-                    className="word-flip font-display text-2xl font-bold text-gradient-gold sm:text-3xl"
-                  >
-                    {currentSlide.brand_name}
-                  </span>
-                </span>
-              </div>
-            </div>
-          </Reveal>
-
-          <Reveal delay={220}>
-            <div className="mt-3 flex h-[64px] items-start overflow-hidden sm:h-[60px]">
-              <p
-                key={currentSlide.id + "-sub"}
-                className="max-w-xl text-[15.5px] font-medium leading-relaxed text-maroon-950 sm:text-[17.5px] transition-opacity duration-300 line-clamp-2 sm:line-clamp-3"
-              >
-                {currentSlide.subtitle}
-              </p>
-            </div>
-          </Reveal>
-
-          <Reveal delay={280}>
-            <div className="mt-8 flex flex-wrap items-center gap-3">
-              <a
-                href={currentSlide.cta_link || "#lead"}
-                className="shine group inline-flex items-center gap-2 rounded-full bg-gradient-to-br from-amber-500 via-orange-600 to-rose-700 px-6 py-3.5 text-[15px] font-bold text-white shadow-xl shadow-orange-500/30 transition-transform hover:-translate-y-0.5"
-              >
-                {currentSlide.cta_text || "Apply for Franchise"}
-                <ArrowRight size={16} className="transition-transform group-hover:translate-x-0.5" />
-              </a>
-              <a
-                href="#brands"
-                className="inline-flex items-center gap-2 rounded-full border border-maroon-900/25 bg-white/90 px-6 py-3.5 text-[15px] font-bold text-maroon-950 backdrop-blur transition hover:bg-white shadow-2xs"
-              >
-                Explore Brands
-              </a>
-              <a
-                href={waLink("Family Cafe King Group")}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-2 rounded-full bg-emerald-600 px-5 py-3.5 text-[15px] font-bold text-white shadow-lg shadow-emerald-600/30 transition hover:bg-emerald-700"
-              >
-                <MessageCircle size={16} /> WhatsApp Us
-              </a>
-            </div>
-          </Reveal>
-
-          {/* Hero stats */}
-          <Reveal delay={360}>
-            <div className="mt-10 grid max-w-lg grid-cols-3 gap-3 sm:gap-5">
-              {STATS.slice(0, 3).map((s) => (
-                <div
-                  key={s.label}
-                  className="rounded-2xl border border-maroon-900/15 bg-white/80 px-4 py-3.5 text-center backdrop-blur shadow-2xs"
-                >
-                  <div className="font-display text-xl font-bold text-maroon-950 sm:text-2xl">{s.value}</div>
-                  <div className="mt-0.5 text-[11px] font-bold uppercase tracking-wide text-maroon-900">
-                    {s.label}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </Reveal>
-        </div>
-
-        {/* RIGHT visual slider */}
-        <Reveal variant="scale" delay={200}>
+      <div className="mx-auto max-w-7xl px-5 sm:px-8">
+        {/* Mobile: only show slider centered */}
+        <div className="block lg:hidden">
           <HeroVisual
             slide={currentSlide}
             matchedBrand={matchedBrand}
@@ -397,7 +314,122 @@ function Hero({ onOpenBrand }: { onOpenBrand: (brand: BrandData) => void }) {
             onHoverStart={() => setIsPaused(true)}
             onHoverEnd={() => setIsPaused(false)}
           />
-        </Reveal>
+        </div>
+
+        {/* Desktop: two-column layout */}
+        <div className="hidden lg:grid max-w-7xl grid-cols-[1.05fr_0.95fr] items-center gap-16">
+          {/* LEFT copy */}
+          <div>
+            <Reveal>
+              <div className="flex h-8 items-center">
+                <span className="inline-flex items-center gap-2 rounded-full border border-maroon-900/20 bg-white/80 px-4 py-1.5 text-[12px] font-bold uppercase tracking-[0.14em] text-maroon-950 backdrop-blur shadow-2xs">
+                  <span className="relative flex h-2.5 w-2.5">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500 opacity-75" />
+                    <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-600" />
+                  </span>
+                  {currentSlide.badge_text || "350+ Franchises All Over India"}
+                </span>
+              </div>
+            </Reveal>
+
+            <Reveal delay={80}>
+              <div className="mt-4 h-[175px] overflow-hidden">
+                <h1
+                  key={currentSlide.id + "-title"}
+                  className="font-display text-[54px] font-bold leading-[1.06] tracking-tight text-maroon-950 transition-opacity duration-300 line-clamp-3"
+                >
+                  {currentSlide.title}
+                </h1>
+              </div>
+            </Reveal>
+
+            <Reveal delay={160}>
+              <div className="mt-2 flex h-10 items-center overflow-hidden">
+                <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 text-[22px]">
+                  <span className="font-bold text-maroon-950">Featured Brand:</span>
+                  <span className="relative inline-flex h-9 items-baseline overflow-hidden">
+                    <span
+                      key={currentSlide.id + "-brand"}
+                      className="word-flip font-display text-3xl font-bold text-gradient-gold"
+                    >
+                      {currentSlide.brand_name}
+                    </span>
+                  </span>
+                </div>
+              </div>
+            </Reveal>
+
+            <Reveal delay={220}>
+              <div className="mt-3 h-[60px] overflow-hidden">
+                <p
+                  key={currentSlide.id + "-sub"}
+                  className="max-w-xl text-[17.5px] font-medium leading-relaxed text-maroon-950 transition-opacity duration-300 line-clamp-2"
+                >
+                  {currentSlide.subtitle}
+                </p>
+              </div>
+            </Reveal>
+
+            <Reveal delay={280}>
+              <div className="mt-8 flex flex-wrap items-center gap-3">
+                <a
+                  href={currentSlide.cta_link || "#lead"}
+                  className="shine group inline-flex items-center gap-2 rounded-full bg-gradient-to-br from-amber-500 via-orange-600 to-rose-700 px-6 py-3.5 text-[15px] font-bold text-white shadow-xl shadow-orange-500/30 transition-transform hover:-translate-y-0.5"
+                >
+                  {currentSlide.cta_text || "Apply for Franchise"}
+                  <ArrowRight size={16} className="transition-transform group-hover:translate-x-0.5" />
+                </a>
+                <a
+                  href="#brands"
+                  className="inline-flex items-center gap-2 rounded-full border border-maroon-900/25 bg-white/90 px-6 py-3.5 text-[15px] font-bold text-maroon-950 backdrop-blur transition hover:bg-white shadow-2xs"
+                >
+                  Explore Brands
+                </a>
+                <a
+                  href={waLink("Family Cafe King Group")}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-2 rounded-full bg-emerald-600 px-5 py-3.5 text-[15px] font-bold text-white shadow-lg shadow-emerald-600/30 transition hover:bg-emerald-700"
+                >
+                  <MessageCircle size={16} /> WhatsApp Us
+                </a>
+              </div>
+            </Reveal>
+
+            {/* Hero stats */}
+            <Reveal delay={360}>
+              <div className="mt-10 grid max-w-lg grid-cols-3 gap-3 sm:gap-5">
+                {STATS.slice(0, 3).map((s) => (
+                  <div
+                    key={s.label}
+                    className="rounded-2xl border border-maroon-900/15 bg-white/80 px-4 py-3.5 text-center backdrop-blur shadow-2xs"
+                  >
+                    <div className="font-display text-xl font-bold text-maroon-950 lg:text-2xl">{s.value}</div>
+                    <div className="mt-0.5 text-[11px] font-bold uppercase tracking-wide text-maroon-900">
+                      {s.label}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Reveal>
+          </div>
+
+          {/* RIGHT visual slider */}
+          <Reveal variant="scale" delay={200}>
+            <HeroVisual
+              slide={currentSlide}
+              matchedBrand={matchedBrand}
+              totalSlides={slides.length}
+              currentIndex={slideIndex}
+              onNext={nextSlide}
+              onPrev={prevSlide}
+              onSelect={(idx) => setSlideIndex(idx)}
+              onOpen={() => onOpenBrand(matchedBrand)}
+              onHoverStart={() => setIsPaused(true)}
+              onHoverEnd={() => setIsPaused(false)}
+            />
+          </Reveal>
+        </div>
       </div>
     </section>
   );
@@ -427,8 +459,25 @@ function HeroVisual({
   onHoverEnd?: () => void;
 }) {
   const [touchStart, setTouchStart] = useState<number | null>(null);
-  const Icon = matchedBrand.icon;
-  const foodImg = slide.image_url || matchedBrand.foodImage || matchedBrand.logo;
+  const [visible, setVisible] = useState(true);
+  // Buffered: only swap content AFTER fade-out completes → no blink
+  const [displayedSlide, setDisplayedSlide] = useState(slide);
+  const [displayedBrand, setDisplayedBrand] = useState(matchedBrand);
+
+  useEffect(() => {
+    if (slide.id === displayedSlide.id) return;
+    // Step 1: fade out old content
+    setVisible(false);
+    const t = setTimeout(() => {
+      // Step 2: swap to new content while invisible
+      setDisplayedSlide(slide);
+      setDisplayedBrand(matchedBrand);
+      // Step 3: fade in new content
+      setVisible(true);
+    }, 220);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [slide.id]);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     setTouchStart(e.touches[0].clientX);
@@ -452,7 +501,7 @@ function HeroVisual({
         onMouseLeave={onHoverEnd}
         className="relative rounded-[36px] bg-gradient-to-br from-maroon-900 via-maroon-800 to-maroon-950 p-1 shadow-[0_60px_120px_-30px_rgba(91,20,20,0.55)] touch-pan-y select-none"
       >
-        <div className="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-[#1a0a0a] to-[#3a0f10] p-7 sm:p-9">
+        <div className="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-[#1a0a0a] to-[#3a0f10] p-5 sm:p-7 md:p-9">
           {/* Ambient rings */}
           <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-gradient-to-br from-amber-400/30 to-orange-500/10 blur-2xl animate-aurora" />
           <div
@@ -460,18 +509,21 @@ function HeroVisual({
             style={{ animationDelay: "3s" }}
           />
 
-          {/* Optional slide background image backdrop */}
-          {slide.image_url && (
+          {/* Slide background image (uses displayedSlide) */}
+          {displayedSlide.image_url && (
             <div className="pointer-events-none absolute inset-0 opacity-15">
-              <img src={slide.image_url} alt="" className="h-full w-full object-cover blur-sm" />
+              <img src={displayedSlide.image_url} alt="" className="h-full w-full object-cover blur-sm" />
             </div>
           )}
 
-          {/* Signboard */}
-          <div className="relative z-10">
+          {/* All dynamic content — fades as one unit */}
+          <div
+            className="relative z-10 transition-opacity duration-[220ms] ease-in-out"
+            style={{ opacity: visible ? 1 : 0 }}
+          >
             <div className="flex items-center justify-between">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-[11.5px] font-bold uppercase tracking-[0.16em] text-amber-200 backdrop-blur">
-                <Sparkles size={11} /> {slide.badge_text || "Family Cafe King Group"}
+                <Sparkles size={11} /> {displayedSlide.badge_text || "Family Cafe King Group"}
               </span>
               <span className="rounded-full bg-emerald-500/20 px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-wider text-emerald-300">
                 Live Slider
@@ -480,51 +532,42 @@ function HeroVisual({
 
             <div className="mt-7 flex items-end justify-between gap-4">
               <div className="min-w-0 flex-1">
-                <div className="text-[13px] font-bold text-amber-200">Featured Concept</div>
-                <div className="flex h-[48px] items-center">
-                  <div
-                    key={slide.id}
-                    className="font-display text-3xl font-extrabold text-white sm:text-4xl"
-                    style={{ animation: "wordFlip 0.6s ease-out" }}
-                  >
-                    {slide.brand_name}
+                <div className="text-[11px] font-bold uppercase tracking-wider text-amber-200 sm:text-[13px]">Featured Concept</div>
+                <div className="mt-1 min-h-[36px]">
+                  <div className="font-display text-[22px] font-extrabold text-white sm:text-3xl md:text-4xl">
+                    {displayedSlide.brand_name}
                   </div>
                 </div>
-                <div className="mt-1 flex h-[42px] items-start text-[13.5px] font-medium leading-snug text-amber-100/90 line-clamp-2">
-                  {slide.subtitle || matchedBrand.tagline}
+                <div className="mt-1 text-[12px] font-medium leading-snug text-amber-100/90 line-clamp-2 sm:text-[13.5px]">
+                  {displayedSlide.subtitle || displayedBrand.tagline}
                 </div>
               </div>
 
-              {/* AI Food Image & Brand Logo Badge */}
+              {/* Food Image & Brand Logo Badge */}
               <div className="relative flex-none">
-                <div
-                  key={slide.id + "-food-badge"}
-                  className="relative grid h-20 w-20 sm:h-22 sm:w-22 place-items-center rounded-2xl p-1 bg-gradient-to-br from-amber-400/40 via-orange-500/30 to-rose-500/40 shadow-[0_10px_25px_-5px_rgba(0,0,0,0.5)] border border-amber-300/40 backdrop-blur-md overflow-hidden group transition-all duration-500"
-                  style={{ animation: "wordFlip 0.5s ease-out" }}
-                >
-                  {foodImg ? (
-                    <img
-                      src={foodImg}
-                      alt={slide.brand_name}
-                      className="h-full w-full rounded-xl object-cover transition-transform duration-700 ease-out group-hover:scale-110 shadow-inner"
-                      onError={(e) => {
-                        (e.target as HTMLElement).style.display = 'none';
-                      }}
-                    />
-                  ) : (
-                    <div
-                      className={`grid h-full w-full place-items-center rounded-xl bg-gradient-to-br ${matchedBrand.accentGradient} text-white shadow-2xl`}
-                      style={{ backgroundColor: slide.accent_color || undefined }}
-                    >
-                      <Icon size={34} strokeWidth={2} />
-                    </div>
-                  )}
-
-                  {/* Mini accent logo badge overlay */}
-                  <div
-                    className={`absolute bottom-1 right-1 flex h-6 w-6 items-center justify-center rounded-lg bg-gradient-to-br ${matchedBrand.accentGradient} text-white shadow-lg ring-2 ring-black/40`}
-                  >
-                    <Icon size={13} strokeWidth={2.5} />
+                <div className="relative grid h-20 w-20 sm:h-22 sm:w-22 place-items-center rounded-2xl p-1 bg-gradient-to-br from-amber-400/40 via-orange-500/30 to-rose-500/40 shadow-[0_10px_25px_-5px_rgba(0,0,0,0.5)] border border-amber-300/40 backdrop-blur-md overflow-hidden group transition-all duration-500">
+                  {(() => {
+                    const img = displayedSlide.image_url || displayedBrand.foodImage || displayedBrand.logo;
+                    const BrandIcon = displayedBrand.icon;
+                    return img ? (
+                      <img
+                        src={img}
+                        alt={displayedSlide.brand_name}
+                        className="h-full w-full rounded-xl object-cover transition-transform duration-700 ease-out group-hover:scale-110 shadow-inner"
+                        onError={(e) => { (e.target as HTMLElement).style.display = "none"; }}
+                      />
+                    ) : (
+                      <div
+                        className={`grid h-full w-full place-items-center rounded-xl bg-gradient-to-br ${displayedBrand.accentGradient} text-white shadow-2xl`}
+                        style={{ backgroundColor: displayedSlide.accent_color || undefined }}
+                      >
+                        <BrandIcon size={34} strokeWidth={2} />
+                      </div>
+                    );
+                  })()}
+                  {/* Mini accent logo badge */}
+                  <div className={`absolute bottom-1 right-1 flex h-6 w-6 items-center justify-center rounded-lg bg-gradient-to-br ${displayedBrand.accentGradient} text-white shadow-lg ring-2 ring-black/40`}>
+                    {(() => { const BrandIcon = displayedBrand.icon; return <BrandIcon size={13} strokeWidth={2.5} />; })()}
                   </div>
                 </div>
                 {/* Steam animation */}
@@ -537,18 +580,18 @@ function HeroVisual({
             </div>
 
             {/* Investment strip */}
-            <div className="mt-7 grid grid-cols-2 gap-3 rounded-2xl border border-white/15 bg-white/[0.08] p-3.5 backdrop-blur text-white">
+            <div className="mt-5 grid grid-cols-2 gap-3 rounded-2xl border border-white/15 bg-white/[0.08] p-3 backdrop-blur text-white sm:mt-7 sm:p-3.5">
               <div className="text-center">
-                <div className="font-display text-lg font-bold text-amber-200">
-                  {slide.price_display || matchedBrand.priceDisplay}
+                <div className="font-display text-[15px] font-bold text-amber-200 sm:text-lg">
+                  {displayedSlide.price_display || displayedBrand.priceDisplay}
                 </div>
-                <div className="text-[10.5px] font-bold uppercase tracking-wider text-white/80">Investment</div>
+                <div className="text-[9.5px] font-bold uppercase tracking-wider text-white/80 sm:text-[10.5px]">Investment</div>
               </div>
               <div className="border-l border-white/15 text-center">
-                <div className="font-display text-lg font-bold text-amber-200">
-                  {slide.space_req || matchedBrand.space}
+                <div className="font-display text-[15px] font-bold text-amber-200 sm:text-lg">
+                  {displayedSlide.space_req || displayedBrand.space}
                 </div>
-                <div className="text-[10.5px] font-bold uppercase tracking-wider text-white/80">Space Req.</div>
+                <div className="text-[9.5px] font-bold uppercase tracking-wider text-white/80 sm:text-[10.5px]">Space Req.</div>
               </div>
             </div>
 
@@ -569,9 +612,8 @@ function HeroVisual({
                       key={idx}
                       type="button"
                       onClick={() => onSelect(idx)}
-                      className={`h-2 rounded-full transition-all ${
-                        idx === currentIndex ? "w-6 bg-amber-400" : "w-2 bg-white/40 hover:bg-white/70"
-                      }`}
+                      className={`h-2 rounded-full transition-all ${idx === currentIndex ? "w-6 bg-amber-400" : "w-2 bg-white/40 hover:bg-white/70"
+                        }`}
                       title={`Go to slide ${idx + 1}`}
                     />
                   ))}
@@ -810,36 +852,34 @@ function Showcase({ onOpenBrand }: { onOpenBrand: (brand: BrandData) => void }) 
   return (
     <section id="showcase" className="relative py-20 sm:py-28">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
-        <div className="mb-12 flex flex-col items-end justify-between gap-6 sm:flex-row">
-          <div>
-            <Reveal>
-              <span className="inline-flex items-center gap-2 rounded-full border border-maroon-900/15 bg-white/80 px-4 py-1.5 text-[11.5px] font-extrabold uppercase tracking-[0.16em] text-maroon-950">
-                <Coffee size={13} /> Menu Highlights
-              </span>
-            </Reveal>
-            <Reveal delay={80}>
-              <h2 className="mt-4 max-w-2xl font-display text-4xl font-bold tracking-tight text-maroon-950 sm:text-5xl">
-                Crowd-favourites crafted <span className="text-gradient-warm">for repeat business</span>.
-              </h2>
-            </Reveal>
-            <Reveal delay={140}>
-              <p className="mt-3 max-w-xl text-[16.5px] font-medium leading-relaxed text-maroon-950">
-                Standardized recipes and high margins. Click on any item or brand to explore the full itemized menu inside the Brand Deck.
-              </p>
-            </Reveal>
-          </div>
+        <div className="mb-12 text-center">
+          <Reveal>
+            <span className="inline-flex items-center gap-2 rounded-full border border-maroon-900/15 bg-white/80 px-4 py-1.5 text-[11.5px] font-extrabold uppercase tracking-[0.16em] text-maroon-950">
+              <Coffee size={13} /> Menu Highlights
+            </span>
+          </Reveal>
+          <Reveal delay={80}>
+            <h2 className="mt-4 font-display text-4xl font-bold tracking-tight text-maroon-950 sm:text-5xl">
+              Crowd-favourites crafted <span className="text-gradient-warm">for repeat business</span>.
+            </h2>
+          </Reveal>
+          <Reveal delay={140}>
+            <p className="mx-auto mt-3 max-w-2xl text-[16.5px] font-medium leading-relaxed text-maroon-950">
+              Standardized recipes and high margins. Click on any item or brand to explore the full itemized menu inside the Brand Deck.
+            </p>
+          </Reveal>
         </div>
 
-        <div className="grid grid-cols-2 gap-4 sm:gap-5 md:grid-cols-3 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 md:grid-cols-3 lg:grid-cols-4">
           {showcaseItems.map((it, k) => {
             const brandObj = BRANDS.find((b) => b.key === it.brandKey) || BRANDS[0];
             return (
-              <Reveal key={it.name} delay={k * 60}>
+              <Reveal key={it.name} delay={k * 60} className="h-full">
                 <article
                   onClick={() => onOpenBrand(brandObj)}
-                  className="lift group relative cursor-pointer overflow-hidden rounded-3xl border border-maroon-900/15 bg-white p-4 shadow-2xs transition hover:border-orange-500/40"
+                  className="lift group relative flex h-full cursor-pointer flex-col overflow-hidden rounded-3xl border border-maroon-900/15 bg-white p-4 shadow-2xs transition hover:border-orange-500/40"
                 >
-                  <div className={`relative aspect-square overflow-hidden rounded-2xl bg-gradient-to-br ${it.grad}`}>
+                  <div className={`relative aspect-square w-full overflow-hidden rounded-2xl bg-gradient-to-br ${it.grad}`}>
                     <img
                       src={it.image}
                       alt={it.name}
@@ -849,14 +889,14 @@ function Showcase({ onOpenBrand }: { onOpenBrand: (brand: BrandData) => void }) 
                       {it.tag}
                     </div>
                   </div>
-                  <div className="mt-4 flex items-start justify-between gap-2">
+                  <div className="mt-4 flex flex-1 items-start justify-between gap-2">
                     <div>
                       <h3 className="font-display text-[16.5px] font-bold leading-tight text-maroon-950">{it.name}</h3>
                       <p className="mt-1 text-[12px] font-bold uppercase tracking-wider text-amber-900">
                         {brandObj.name}
                       </p>
                     </div>
-                    <span className="grid h-8 w-8 place-items-center rounded-full bg-maroon-900/10 text-maroon-950 transition group-hover:bg-amber-500 group-hover:text-white">
+                    <span className="grid h-8 w-8 flex-shrink-0 place-items-center rounded-full bg-maroon-900/10 text-maroon-950 transition group-hover:bg-amber-500 group-hover:text-white">
                       <ArrowUpRight size={16} />
                     </span>
                   </div>
@@ -948,6 +988,139 @@ function Benefits() {
   );
 }
 
+
+
+/* ---------- STAFF TRAINING & SUPPORT ---------- */
+function StaffTraining() {
+  return (
+    <section id="training" className="relative overflow-hidden bg-gradient-to-b from-cream-50 via-amber-50/50 to-cream-50 py-20 sm:py-28">
+      <div className="pointer-events-none absolute inset-0 -z-10 opacity-30 bg-grain" />
+      <div className="pointer-events-none absolute top-1/3 right-10 -z-10 h-72 w-72 rounded-full bg-amber-400/20 blur-3xl" />
+
+      <div className="mx-auto max-w-7xl px-5 sm:px-8">
+        <div className="mb-14 text-center">
+          <Reveal>
+            <span className="inline-flex items-center gap-2 rounded-full border border-emerald-900/20 bg-emerald-500/10 px-4.5 py-2 text-[12px] font-extrabold uppercase tracking-[0.16em] text-emerald-800 shadow-2xs backdrop-blur">
+              <Award size={14} className="text-emerald-600" /> Complete Operational Backing
+            </span>
+          </Reveal>
+          <Reveal delay={80}>
+            <h2 className="mt-5 font-display text-4xl font-extrabold tracking-tight text-maroon-950 sm:text-5xl lg:text-6xl">
+              Staff Training &amp; <span className="text-gradient-warm">Support</span>
+            </h2>
+          </Reveal>
+          <Reveal delay={140}>
+            <p className="mx-auto mt-4 max-w-2xl text-[17px] font-semibold leading-relaxed text-maroon-900 sm:text-[18px]">
+              Food Training Support (Pan India)
+            </p>
+          </Reveal>
+        </div>
+
+        {/* Dynamic Feature Grid */}
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+          {/* 1. Food Type / Category */}
+          <Reveal delay={100}>
+            <div className="group flex h-full flex-col justify-between rounded-3xl border border-maroon-900/15 bg-white p-7 shadow-lg backdrop-blur-md transition-all duration-300 hover:-translate-y-1.5 hover:border-amber-500/40 hover:shadow-2xl">
+              <div>
+                <div className="flex items-center gap-3">
+                  <div className="grid h-12 w-12 flex-shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-md shadow-orange-500/20">
+                    <Coffee size={22} strokeWidth={2.5} />
+                  </div>
+                  <h3 className="font-display text-xl font-bold tracking-wide text-maroon-950">
+                    Food Type / Category
+                  </h3>
+                </div>
+                <div className="mt-6 flex flex-wrap gap-2">
+                  {["ONLY VEG & INDIAN", "FAST FOOD", "MOCKTAILS"].map((cat) => (
+                    <span
+                      key={cat}
+                      className="inline-flex items-center gap-1.5 rounded-xl border border-amber-900/15 bg-amber-50/80 px-3.5 py-2 text-[13px] font-extrabold text-maroon-950 shadow-2xs"
+                    >
+                      <Check size={14} className="text-emerald-600" strokeWidth={3} />
+                      {cat}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              <p className="mt-6 border-t border-maroon-900/10 pt-4 text-[13px] font-semibold text-maroon-900/80">
+                Full master recipes, ingredient standardisation &amp; SOPs included.
+              </p>
+            </div>
+          </Reveal>
+
+          {/* 2. Time Period */}
+          <Reveal delay={180}>
+            <div className="group flex h-full flex-col justify-between rounded-3xl border border-maroon-900/15 bg-white p-7 shadow-lg backdrop-blur-md transition-all duration-300 hover:-translate-y-1.5 hover:border-amber-500/40 hover:shadow-2xl">
+              <div>
+                <div className="flex items-center gap-3">
+                  <div className="grid h-12 w-12 flex-shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-orange-500 to-rose-600 text-white shadow-md shadow-orange-500/20">
+                    <TrendingUp size={22} strokeWidth={2.5} />
+                  </div>
+                  <h3 className="font-display text-xl font-bold tracking-wide text-maroon-950">
+                    Time Period
+                  </h3>
+                </div>
+                <div className="mt-6">
+                  <div className="font-display text-2xl font-black text-maroon-950 sm:text-3xl">
+                    6 Months Hotel Visit
+                  </div>
+                  <p className="mt-2.5 text-[14.5px] font-semibold leading-relaxed text-maroon-900">
+                    On-site master chef &amp; trainer assigned to train your local team.
+                  </p>
+                </div>
+              </div>
+              <div className="mt-6 border-t border-maroon-900/10 pt-4">
+                <span className="inline-flex items-center gap-1.5 text-[13px] font-extrabold text-emerald-700">
+                  <Sparkles size={14} /> Full On-Site Kitchen Training
+                </span>
+              </div>
+            </div>
+          </Reveal>
+
+          {/* 3. Initial Costing */}
+          <Reveal delay={260}>
+            <div className="group flex h-full flex-col justify-between rounded-3xl border border-maroon-900/15 bg-gradient-to-br from-white via-cream-50 to-amber-50/70 p-7 shadow-lg backdrop-blur-md transition-all duration-300 hover:-translate-y-1.5 hover:border-amber-500/40 hover:shadow-2xl">
+              <div>
+                <div className="flex items-center gap-3">
+                  <div className="grid h-12 w-12 flex-shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-amber-500 to-amber-600 text-white shadow-md shadow-amber-500/20">
+                    <Crown size={22} strokeWidth={2.5} />
+                  </div>
+                  <h3 className="font-display text-xl font-bold tracking-wide text-maroon-950">
+                    Initial Costing
+                  </h3>
+                </div>
+                <div className="mt-6">
+                  <div className="font-display text-2xl font-black text-gradient-warm sm:text-3xl">
+                    1.5 Lakh Training Charge
+                  </div>
+                  <ul className="mt-4 space-y-2 text-[13.5px] font-bold text-maroon-950">
+                    <li className="flex items-start gap-2">
+                      <span className="mt-1 h-2 w-2 rounded-full bg-amber-600 flex-shrink-0" />
+                      + Travel Expenses of Trainer
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="mt-1 h-2 w-2 rounded-full bg-amber-600 flex-shrink-0" />
+                      + Stay &amp; Food for Trainer
+                    </li>
+                  </ul>
+                </div>
+              </div>
+              <div className="mt-6 border-t border-maroon-900/10 pt-4">
+                <a
+                  href="#lead"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-amber-500 via-orange-600 to-rose-700 px-5 py-3.5 text-[14px] font-extrabold text-white shadow-lg shadow-orange-500/25 transition hover:brightness-110"
+                >
+                  Book Staff Training <ArrowRight size={15} />
+                </a>
+              </div>
+            </div>
+          </Reveal>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 /* ---------- TESTIMONIALS ---------- */
 function Testimonials() {
   return (
@@ -1024,6 +1197,126 @@ function Testimonials() {
 }
 
 /* ---------- PRICING ---------- */
+function PricingCard({ plan: p }: { plan: (typeof PLANS)[number] }) {
+  const [active, setActive] = useState(false);
+
+  const handleMouseEnter = () => setActive(true);
+  const handleMouseLeave = () => setActive(false);
+  const handleClick = () => setActive((prev) => !prev);
+
+  const isActive = active;
+
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      onClick={handleClick}
+      onKeyDown={(e) => e.key === "Enter" && handleClick()}
+      className={`relative flex h-full flex-col overflow-hidden rounded-3xl p-8 backdrop-blur transition-all duration-500 ease-out cursor-pointer select-none ${isActive
+          ? "-translate-y-2.5 shadow-[0_35px_75px_-15px_rgba(217,115,20,0.45)]"
+          : ""
+        } ${p.highlighted
+          ? `border-2 shadow-[0_20px_50px_-15px_rgba(217,115,20,0.3)] ${isActive
+            ? "border-amber-400 bg-gradient-to-br from-[#1D0609] via-[#2F0A0E] to-[#170406]"
+            : "border-amber-500 bg-gradient-to-b from-white via-cream-50 to-amber-50/80"
+          }`
+          : `border ${isActive
+            ? "border-amber-400 bg-gradient-to-br from-[#1D0609] via-[#2F0A0E] to-[#170406]"
+            : "border-maroon-900/15 bg-white shadow-sm"
+          }`
+        }`}
+    >
+      {/* Ribbon */}
+      {p.ribbon && (
+        <div
+          className={`absolute right-6 top-6 rounded-full px-3.5 py-1 text-[11px] font-extrabold uppercase tracking-wider shadow-md transition-all duration-500 ${isActive
+              ? "scale-110 bg-gradient-to-br from-amber-400 to-amber-500 text-maroon-950"
+              : "bg-gradient-to-br from-amber-500 to-orange-600 text-white"
+            }`}
+        >
+          {p.ribbon}
+        </div>
+      )}
+
+      {/* Name */}
+      <h3
+        className={`font-display text-2xl font-extrabold transition-colors duration-500 sm:text-3xl ${isActive ? "text-amber-300" : "text-maroon-950"
+          }`}
+      >
+        {p.name}
+      </h3>
+
+      {/* Tagline */}
+      <p
+        className={`mt-1.5 text-[14px] font-semibold transition-colors duration-500 ${isActive ? "text-amber-100/90" : "text-maroon-800"
+          }`}
+      >
+        {p.tagline}
+      </p>
+
+      {/* Price */}
+      <div className="mt-6 flex items-baseline gap-2">
+        <span
+          className={`font-display text-4xl font-black transition-colors duration-500 sm:text-5xl ${isActive ? "text-white" : "text-maroon-950"
+            }`}
+        >
+          {p.price}
+        </span>
+      </div>
+      <p
+        className={`mt-1 text-[12.5px] font-extrabold uppercase tracking-wider transition-colors duration-500 ${isActive ? "text-amber-400" : "text-amber-900"
+          }`}
+      >
+        {p.priceNote}
+      </p>
+
+      {/* Features */}
+      <ul className="mt-6 flex-1 space-y-3.5">
+        {p.features.map((f) => (
+          <li
+            key={f}
+            className={`flex items-start gap-3 text-[14.5px] font-semibold transition-colors duration-500 ${isActive ? "text-amber-50" : "text-maroon-950"
+              }`}
+          >
+            <span
+              className={`mt-0.5 grid h-5 w-5 flex-shrink-0 place-items-center rounded-full transition-all duration-500 ${p.highlighted
+                  ? isActive
+                    ? "scale-110 bg-amber-400 text-maroon-950"
+                    : "bg-gradient-to-br from-amber-500 to-orange-600 text-white"
+                  : isActive
+                    ? "scale-110 bg-amber-400 text-maroon-950"
+                    : "bg-maroon-900/10 text-maroon-950"
+                }`}
+            >
+              <Check size={12} strokeWidth={3} />
+            </span>
+            {f}
+          </li>
+        ))}
+      </ul>
+
+      {/* CTA */}
+      <a
+        href="#lead"
+        onClick={(e) => e.stopPropagation()}
+        className={`mt-8 inline-flex items-center justify-center gap-2 rounded-full px-6 py-3.5 text-[14.5px] font-extrabold transition-all duration-500 shadow-md ${p.highlighted
+            ? isActive
+              ? "scale-[1.02] bg-gradient-to-br from-amber-400 to-orange-500 text-maroon-950 shadow-amber-500/40"
+              : "bg-gradient-to-br from-amber-500 via-orange-600 to-rose-700 text-white shadow-xl shadow-orange-500/30"
+            : isActive
+              ? "scale-[1.02] border-transparent bg-gradient-to-br from-amber-400 to-orange-500 text-maroon-950 shadow-lg shadow-amber-500/30"
+              : "border border-maroon-900/20 bg-white text-maroon-950"
+          }`}
+      >
+        {p.cta}
+        <ArrowRight size={15} />
+      </a>
+    </div>
+  );
+}
+
 function Pricing() {
   return (
     <section id="pricing" className="relative overflow-hidden py-20 sm:py-28">
@@ -1052,64 +1345,7 @@ function Pricing() {
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           {PLANS.map((p, k) => (
             <Reveal key={p.name} delay={k * 100}>
-              <div
-                className={`group relative flex h-full flex-col overflow-hidden rounded-3xl p-8 backdrop-blur transition-all duration-500 ease-out hover:-translate-y-2.5 hover:shadow-[0_35px_75px_-15px_rgba(217,115,20,0.45)] cursor-pointer ${
-                  p.highlighted
-                    ? "border-2 border-amber-500 bg-gradient-to-b from-white via-cream-50 to-amber-50/80 shadow-[0_20px_50px_-15px_rgba(217,115,20,0.3)] hover:border-amber-400 hover:bg-gradient-to-br hover:from-[#1D0609] hover:via-[#2F0A0E] hover:to-[#170406]"
-                    : "border border-maroon-900/15 bg-white shadow-sm hover:border-amber-400 hover:bg-gradient-to-br hover:from-[#1D0609] hover:via-[#2F0A0E] hover:to-[#170406]"
-                }`}
-              >
-                {p.ribbon && (
-                  <div className="absolute right-6 top-6 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 px-3.5 py-1 text-[11px] font-extrabold uppercase tracking-wider text-white shadow-md transition-all duration-500 group-hover:scale-110 group-hover:from-amber-400 group-hover:to-amber-500 group-hover:text-maroon-950">
-                    {p.ribbon}
-                  </div>
-                )}
-
-                <h3 className="font-display text-2xl font-extrabold text-maroon-950 transition-colors duration-500 group-hover:text-amber-300 sm:text-3xl">
-                  {p.name}
-                </h3>
-                <p className="mt-1.5 text-[14px] font-semibold text-maroon-800 transition-colors duration-500 group-hover:text-amber-100/90">
-                  {p.tagline}
-                </p>
-
-                <div className="mt-6 flex items-baseline gap-2">
-                  <span className="font-display text-4xl font-black text-maroon-950 transition-colors duration-500 group-hover:text-white sm:text-5xl">
-                    {p.price}
-                  </span>
-                </div>
-                <p className="mt-1 text-[12.5px] font-extrabold uppercase tracking-wider text-amber-900 transition-colors duration-500 group-hover:text-amber-400">
-                  {p.priceNote}
-                </p>
-
-                <ul className="mt-6 flex-1 space-y-3.5">
-                  {p.features.map((f) => (
-                    <li key={f} className="flex items-start gap-3 text-[14.5px] font-semibold text-maroon-950 transition-colors duration-500 group-hover:text-amber-50">
-                      <span
-                        className={`mt-0.5 grid h-5 w-5 flex-shrink-0 place-items-center rounded-full transition-all duration-500 ${
-                          p.highlighted
-                            ? "bg-gradient-to-br from-amber-500 to-orange-600 text-white group-hover:bg-amber-400 group-hover:text-maroon-950 group-hover:scale-110"
-                            : "bg-maroon-900/10 text-maroon-950 group-hover:bg-amber-400 group-hover:text-maroon-950 group-hover:scale-110"
-                        }`}
-                      >
-                        <Check size={12} strokeWidth={3} />
-                      </span>
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-
-                <a
-                  href="#lead"
-                  className={`mt-8 inline-flex items-center justify-center gap-2 rounded-full px-6 py-3.5 text-[14.5px] font-extrabold transition-all duration-500 shadow-md ${
-                    p.highlighted
-                      ? "bg-gradient-to-br from-amber-500 via-orange-600 to-rose-700 text-white shadow-xl shadow-orange-500/30 group-hover:scale-[1.02] group-hover:from-amber-400 group-hover:to-orange-500 group-hover:text-maroon-950 group-hover:shadow-amber-500/40"
-                      : "border border-maroon-900/20 bg-white text-maroon-950 group-hover:border-transparent group-hover:bg-gradient-to-br group-hover:from-amber-400 group-hover:to-orange-500 group-hover:text-maroon-950 group-hover:shadow-lg group-hover:shadow-amber-500/30 group-hover:scale-[1.02]"
-                  }`}
-                >
-                  {p.cta}
-                  <ArrowRight size={15} />
-                </a>
-              </div>
+              <PricingCard plan={p} />
             </Reveal>
           ))}
         </div>
@@ -1143,9 +1379,8 @@ function FAQ() {
             return (
               <Reveal key={f.q} delay={k * 40}>
                 <div
-                  className={`overflow-hidden rounded-2xl border transition-all duration-500 ${
-                    isOpen ? "border-orange-500/40 bg-white shadow-lg shadow-orange-500/10" : "border-maroon-900/15 bg-white/90 backdrop-blur"
-                  }`}
+                  className={`overflow-hidden rounded-2xl border transition-all duration-500 ${isOpen ? "border-orange-500/40 bg-white shadow-lg shadow-orange-500/10" : "border-maroon-900/15 bg-white/90 backdrop-blur"
+                    }`}
                 >
                   <button
                     onClick={() => setOpenIdx(isOpen ? null : k)}
@@ -1156,17 +1391,15 @@ function FAQ() {
                       {f.q}
                     </span>
                     <span
-                      className={`grid h-8 w-8 flex-shrink-0 place-items-center rounded-full transition-all duration-300 ${
-                        isOpen ? "rotate-180 bg-gradient-to-br from-amber-500 to-orange-600 text-white" : "bg-maroon-900/10 text-maroon-950"
-                      }`}
+                      className={`grid h-8 w-8 flex-shrink-0 place-items-center rounded-full transition-all duration-300 ${isOpen ? "rotate-180 bg-gradient-to-br from-amber-500 to-orange-600 text-white" : "bg-maroon-900/10 text-maroon-950"
+                        }`}
                     >
                       {isOpen ? <Minus size={14} /> : <Plus size={14} />}
                     </span>
                   </button>
                   <div
-                    className={`grid transition-all duration-500 ease-out ${
-                      isOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
-                    }`}
+                    className={`grid transition-all duration-500 ease-out ${isOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+                      }`}
                   >
                     <div className="overflow-hidden">
                       <p className="px-5 pb-5 text-[15px] font-medium leading-relaxed text-maroon-900 sm:px-6">
@@ -1640,7 +1873,6 @@ function Footer({
             >
               Terms of Service
             </button>
-            <a href="#franchise-login" className="link-underline transition hover:text-white">Franchise & Admin Login</a>
             <a href="#top" className="link-underline transition hover:text-white">Back to Top</a>
             <a href="#lead" className="link-underline transition hover:text-white">Get Prospectus</a>
           </div>
@@ -1679,7 +1911,7 @@ function WhatsAppChatButton() {
       target="_blank"
       rel="noreferrer"
       aria-label="Chat on WhatsApp"
-      className="fixed bottom-20 right-4 z-40 grid h-11 w-11 place-items-center rounded-full bg-emerald-600 text-white shadow-xl shadow-emerald-600/40 transition-all duration-300 hover:bg-emerald-500 hover:scale-110 sm:bottom-6 sm:right-6 sm:h-12 sm:w-12"
+      className="hidden sm:grid fixed bottom-6 right-6 z-40 h-12 w-12 place-items-center rounded-full bg-emerald-600 text-white shadow-xl shadow-emerald-600/40 transition-all duration-300 hover:bg-emerald-500 hover:scale-110"
       title="Chat on WhatsApp"
     >
       <WhatsApp size={22} />
@@ -1751,6 +1983,7 @@ export default function App() {
         <Features />
         <Showcase onOpenBrand={handleOpenBrand} />
         <Benefits />
+        <StaffTraining />
         <Testimonials />
         <Pricing />
         <FAQ />
@@ -1785,6 +2018,9 @@ export default function App() {
 
       {/* Persistent WhatsApp Chat CTA */}
       <WhatsAppChatButton />
+
+      {/* GDPR / Privacy Cookie Consent Banner */}
+      <CookieBanner onOpenPrivacy={() => setLegalType("privacy")} />
     </div>
   );
 }

@@ -53,7 +53,7 @@ export function UpcomingLaunches({ onOpenCityBooking }: UpcomingLaunchesProps = 
             </span>
           </Reveal>
           <Reveal delay={80}>
-            <h2 className="mt-5 font-display text-4xl font-extrabold tracking-tight text-maroon-950 sm:text-5xl lg:text-6xl text-center">
+            <h2 className="mt-5 font-display text-[27px] xs:text-3xl font-extrabold tracking-tight text-maroon-950 sm:text-5xl lg:text-6xl text-center whitespace-nowrap">
               Brewing in <span className="text-gradient-warm">new destinations</span>
             </h2>
           </Reveal>
