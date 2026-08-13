@@ -543,23 +543,6 @@ export function AdminPortal() {
               isNight={isNight}
             />
 
-            {/* Auto fill quick shortcut for testing/admin access */}
-            <div className="flex flex-wrap gap-2 pt-1">
-              <button
-                type="button"
-                onClick={() => {
-                  setEmail("familycafeking.com@gmail.com");
-                  setPassword("Admin@FCK2026");
-                }}
-                className={`rounded-xl border px-3 py-1.5 text-[11px] font-bold transition ${
-                  isNight
-                    ? "border-amber-500/40 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20"
-                    : "border-amber-300 bg-amber-100/80 text-amber-950 hover:bg-amber-200"
-                }`}
-              >
-                ⚡ Auto-Fill Credentials
-              </button>
-            </div>
 
             {authError && (
               <p className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-xs font-bold text-rose-400">

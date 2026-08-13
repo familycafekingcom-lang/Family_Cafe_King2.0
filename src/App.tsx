@@ -125,9 +125,6 @@ function Nav() {
             <div className="font-display text-[15px] font-bold tracking-tight text-maroon-950 sm:text-base">
               Family Cafe King
             </div>
-            <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-amber-900">
-              350+ Outlets Nationwide
-            </div>
           </div>
         </a>
 
@@ -163,17 +160,8 @@ function Nav() {
           </a>
         </div>
 
-        {/* Mobile right: WhatsApp icon + Hamburger */}
+        {/* Mobile right: Hamburger */}
         <div className="flex items-center gap-2 lg:hidden">
-          <a
-            href={waLink("Family Cafe King Group")}
-            target="_blank"
-            rel="noreferrer"
-            aria-label="Chat on WhatsApp"
-            className="grid h-9 w-9 place-items-center rounded-xl bg-emerald-600 text-white shadow-md transition hover:bg-emerald-500"
-          >
-            <WhatsApp size={18} />
-          </a>
           <button
             aria-label="Toggle menu"
             aria-expanded={open}

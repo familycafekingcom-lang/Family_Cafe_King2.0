@@ -29,7 +29,6 @@ export function CookieBanner({ onOpenPrivacy }: CookieConsentProps) {
 
   const handleAcceptAll = async () => {
     const deviceInfo = detectDeviceInfo();
-    const timestamp = new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
 
     try {
       localStorage.setItem(

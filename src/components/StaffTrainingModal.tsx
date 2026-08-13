@@ -2,19 +2,9 @@ import { useEffect } from "react";
 import {
   X,
   MessageCircle,
-  Phone,
-  Check,
-  Sparkles,
   Award,
-  Coffee,
-  TrendingUp,
-  Crown,
-  Calendar,
-  DollarSign,
-  UtensilsCrossed,
-  ShieldCheck,
 } from "lucide-react";
-import { CONTACT_PHONE, waLink } from "../data";
+import { waLink } from "../data";
 
 interface StaffTrainingModalProps {
   isOpen: boolean;
