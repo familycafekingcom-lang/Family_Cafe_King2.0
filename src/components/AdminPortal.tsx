@@ -41,6 +41,8 @@ import {
   deleteSlide,
   getVisitorStats,
   listBookings,
+  listContacts,
+  deleteContactRecord,
   listLaunches,
   listLeads,
   listSlides,
@@ -200,10 +202,10 @@ export function AdminPortal() {
       // Async fetch remaining non-critical items
       Promise.all([
         listBookings(session.accessToken).catch(() => []),
-        apiGetContacts(session.accessToken).catch(() => []),
+        listContacts(session.accessToken).catch(() => []),
       ]).then(([bookingRows, contactRows]) => {
         setBookings(bookingRows as MernBooking[]);
-        setContacts(contactRows);
+        setContacts(contactRows as MernContact[]);
       });
     } catch (error) {
       setDataError(error instanceof Error ? error.message : "Unable to load dashboard data");
@@ -221,10 +223,14 @@ export function AdminPortal() {
 
     const handleUpdate = () => void loadData();
     window.addEventListener("fck_bookings_updated", handleUpdate);
+    window.addEventListener("fck_leads_updated", handleUpdate);
+    window.addEventListener("fck_contacts_updated", handleUpdate);
     window.addEventListener("storage", handleUpdate);
 
     return () => {
       window.removeEventListener("fck_bookings_updated", handleUpdate);
+      window.removeEventListener("fck_leads_updated", handleUpdate);
+      window.removeEventListener("fck_contacts_updated", handleUpdate);
       window.removeEventListener("storage", handleUpdate);
     };
   }, [loadData]);
@@ -318,7 +324,7 @@ export function AdminPortal() {
   const removeContact = async (id: string) => {
     if (!session || !window.confirm("Delete this contact inquiry?")) return;
     try {
-      await apiDeleteContact(id, session.accessToken);
+      await deleteContactRecord(id, session.accessToken);
       setContacts((current) => current.filter((c) => (c._id || c.id) !== id));
     } catch (err) {
       alert(err instanceof Error ? err.message : "Could not delete contact");
@@ -662,7 +668,7 @@ export function AdminPortal() {
               { id: "leads", label: `Franchise Leads (${stats.total})`, icon: <Users size={15} /> },
               { id: "slides", label: `Hero Slider (${stats.slidesCount})`, icon: <Sliders size={15} /> },
               { id: "launches", label: `Upcoming Launches (${stats.launchesCount})`, icon: <MapPin size={15} /> },
-              { id: "bookings", label: `Bookings (${stats.bookingsCount})`, icon: <Calendar size={15} /> },
+              { id: "bookings", label: `Territory & Training Bookings (${stats.bookingsCount})`, icon: <Calendar size={15} /> },
               { id: "contacts", label: `Inquiries (${stats.contactsCount})`, icon: <Inbox size={15} /> },
             ].map((tab) => (
               <button
@@ -1277,8 +1283,8 @@ export function AdminPortal() {
           }`}>
             <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
               <div>
-                <h2 className={`font-display text-xl font-black ${isNight ? "text-white" : "text-slate-900"}`}>City Territory & Outlet Bookings</h2>
-                <p className={`text-xs font-medium ${isNight ? "text-slate-400" : "text-amber-900/70"}`}>Franchise city territory reservations and outlet bookings received from customers.</p>
+                <h2 className={`font-display text-xl font-black ${isNight ? "text-white" : "text-slate-900"}`}>City Territory &amp; Staff Training Bookings</h2>
+                <p className={`text-xs font-medium ${isNight ? "text-slate-400" : "text-amber-900/70"}`}>Franchise city territory reservations, Staff Training &amp; Operational Support bookings received from customers.</p>
               </div>
               <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-xs font-extrabold text-amber-500">
                 {bookings.length} Total Bookings

@@ -16,7 +16,7 @@ export function CityBookingModal({ isOpen, initialCity = "", initialBrand = "", 
     phone: "",
     email: "",
     city: initialCity || "",
-    brand: initialBrand || BRANDS[0].name,
+    brand: initialBrand || BRANDS.find((b) => b.key !== "fck")?.name || "Chai Cafe King",
     budget: "₹3 - 5 Lakhs",
     notes: "",
   });
@@ -111,7 +111,7 @@ export function CityBookingModal({ isOpen, initialCity = "", initialBrand = "", 
       phone: "",
       email: "",
       city: initialCity || "",
-      brand: BRANDS[0].name,
+      brand: BRANDS.find((b) => b.key !== "fck")?.name || "Chai Cafe King",
       budget: "₹3 - 5 Lakhs",
       notes: "",
     });
@@ -282,7 +282,7 @@ export function CityBookingModal({ isOpen, initialCity = "", initialBrand = "", 
                     onChange={(e) => setForm({ ...form, brand: e.target.value })}
                     className="w-full rounded-xl border border-maroon-900/20 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
                   >
-                    {BRANDS.map((b) => (
+                    {BRANDS.filter((b) => b.key !== "fck").map((b) => (
                       <option key={b.key} value={b.name}>
                         {b.name}
                       </option>

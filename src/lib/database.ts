@@ -1,14 +1,17 @@
 import {
   apiAdminLogin,
   apiCreateBooking,
+  apiCreateContact,
   apiCreateLaunch,
   apiCreateLead,
   apiCreateSlide,
   apiDeleteBooking,
+  apiDeleteContact,
   apiDeleteLaunch,
   apiDeleteLead,
   apiDeleteSlide,
   apiGetBookings,
+  apiGetContacts,
   apiGetLaunches,
   apiGetLeads,
   apiGetSlides,
@@ -20,6 +23,7 @@ import {
   apiUpdateTraining,
   apiDeleteTraining,
   checkBackendHealth,
+  type MernContact,
   type MernLaunch,
   type MernLead,
   type MernSlide,
@@ -93,6 +97,7 @@ export const DATABASE_MODE: "mern" | "supabase" | "local" = "mern";
 const LEADS_KEY = "fck_leads_v1";
 const LAUNCHES_KEY = "fck_upcoming_launches_v1";
 const SLIDES_KEY = "fck_hero_slides_v1";
+const CONTACTS_KEY = "fck_contacts_v1";
 
 export const DEFAULT_SLIDES: SlideRecord[] = [
   {
@@ -284,6 +289,18 @@ const normalizeSlide = (value: unknown): SlideRecord => {
   };
 };
 
+export const notifyLeadsChanged = () => {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("fck_leads_updated"));
+  }
+};
+
+export const notifyContactsChanged = () => {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("fck_contacts_updated"));
+  }
+};
+
 export const notifyLaunchesChanged = () => {
   if (typeof window !== "undefined") {
     window.dispatchEvent(new CustomEvent("fck_launches_updated"));
@@ -299,6 +316,9 @@ export const notifySlidesChanged = () => {
 export async function saveLead(input: LeadInput): Promise<SaveResult> {
   const source_page = window.location.hash.includes("admin") ? "admin-test" : "landing-page";
 
+  let record: LeadRecord;
+  let storage: "mern" | "local" = "local";
+
   try {
     const isMernAlive = await checkBackendHealth();
     if (isMernAlive) {
@@ -313,25 +333,37 @@ export async function saveLead(input: LeadInput): Promise<SaveResult> {
         notes: "",
         source_page,
       });
-      return { record: normalizeLead(created), storage: "mern" };
+      record = normalizeLead(created);
+      storage = "mern";
+    } else {
+      record = {
+        ...input,
+        id: makeId("lead"),
+        created_at: new Date().toISOString(),
+        status: "New",
+        notes: "",
+        source_page,
+      };
     }
   } catch (err) {
     console.warn("MERN Lead Save failed, using local storage fallback", err);
+    record = {
+      ...input,
+      id: makeId("lead"),
+      created_at: new Date().toISOString(),
+      status: "New",
+      notes: "",
+      source_page,
+    };
   }
 
-  // Fallback to local storage
-  const record: LeadRecord = {
-    ...input,
-    id: makeId("lead"),
-    created_at: new Date().toISOString(),
-    status: "New",
-    notes: "",
-    source_page,
-  };
+  // Always sync to local storage cache & notify UI
   const leads = readJson<LeadRecord[]>(LEADS_KEY, []);
-  const next = [record, ...leads.map(normalizeLead)];
+  const next = [record, ...leads.map(normalizeLead).filter((l) => l.id !== record.id)];
   writeJson(LEADS_KEY, next);
-  return { record, storage: "local" };
+  notifyLeadsChanged();
+
+  return { record, storage };
 }
 
 export async function listLeads(accessToken?: string): Promise<LeadRecord[]> {
@@ -339,7 +371,9 @@ export async function listLeads(accessToken?: string): Promise<LeadRecord[]> {
     const isMernAlive = await checkBackendHealth();
     if (isMernAlive) {
       const mernLeads = await apiGetLeads(accessToken);
-      return mernLeads.map(normalizeLead);
+      if (mernLeads && mernLeads.length > 0) {
+        return mernLeads.map(normalizeLead);
+      }
     }
   } catch (err) {
     console.warn("MERN List Leads failed, loading from local storage", err);
@@ -359,6 +393,7 @@ export async function updateLead(
     const isMernAlive = await checkBackendHealth();
     if (isMernAlive) {
       const updated = await apiUpdateLead(id, updates, accessToken);
+      notifyLeadsChanged();
       return normalizeLead(updated);
     }
   } catch (err) {
@@ -370,6 +405,7 @@ export async function updateLead(
   if (index < 0) throw new Error("Lead not found");
   leads[index] = { ...leads[index], ...updates };
   writeJson(LEADS_KEY, leads);
+  notifyLeadsChanged();
   return leads[index];
 }
 
@@ -378,7 +414,6 @@ export async function deleteLead(id: string, accessToken?: string): Promise<void
     const isMernAlive = await checkBackendHealth();
     if (isMernAlive) {
       await apiDeleteLead(id, accessToken);
-      return;
     }
   } catch (err) {
     console.warn("MERN Delete Lead failed, deleting from local storage", err);
@@ -388,6 +423,121 @@ export async function deleteLead(id: string, accessToken?: string): Promise<void
     LEADS_KEY,
     readJson<LeadRecord[]>(LEADS_KEY, []).map(normalizeLead).filter((lead) => lead.id !== id)
   );
+  notifyLeadsChanged();
+}
+
+// ================= CONTACT INQUIRIES CRUD =================
+export interface ContactInput {
+  name: string;
+  phone: string;
+  email?: string;
+  subject?: string;
+  message: string;
+}
+
+export interface ContactRecord extends ContactInput {
+  id: string;
+  created_at: string;
+  createdAt?: string;
+}
+
+export async function saveContact(input: ContactInput): Promise<{ record: ContactRecord; storage: string }> {
+  let record: ContactRecord;
+  let storage = "local";
+
+  try {
+    const isMernAlive = await checkBackendHealth();
+    if (isMernAlive) {
+      const created = await apiCreateContact({
+        name: input.name,
+        phone: input.phone,
+        email: input.email || "",
+        subject: input.subject || "Direct Contact Inquiry",
+        message: input.message,
+      });
+      record = {
+        ...input,
+        id: created._id || created.id || makeId("contact"),
+        created_at: created.createdAt || new Date().toISOString(),
+        createdAt: created.createdAt || new Date().toISOString(),
+      };
+      storage = "mern";
+    } else {
+      record = {
+        ...input,
+        id: makeId("contact"),
+        created_at: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
+      };
+    }
+  } catch (err) {
+    console.warn("MERN Save Contact failed, using local storage fallback", err);
+    record = {
+      ...input,
+      id: makeId("contact"),
+      created_at: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
+    };
+  }
+
+  const localContacts = readJson<ContactRecord[]>(CONTACTS_KEY, []);
+  writeJson(CONTACTS_KEY, [record, ...localContacts.filter((c) => (c.id || (c as any)._id) !== record.id)]);
+  notifyContactsChanged();
+  return { record, storage };
+}
+
+export async function listContacts(accessToken?: string): Promise<ContactRecord[]> {
+  let mernRows: ContactRecord[] = [];
+  try {
+    const isMernAlive = await checkBackendHealth();
+    if (isMernAlive) {
+      const rows = await apiGetContacts(accessToken);
+      mernRows = rows.map((c) => ({
+        id: c._id || c.id || makeId("contact"),
+        name: c.name || "Inquiry Visitor",
+        phone: c.phone || "",
+        email: c.email || "",
+        subject: c.subject || "Direct Contact Inquiry",
+        message: c.message || "",
+        created_at: c.createdAt || new Date().toISOString(),
+        createdAt: c.createdAt || new Date().toISOString(),
+      }));
+    }
+  } catch (err) {
+    console.warn("MERN List Contacts failed, reading local storage", err);
+  }
+
+  const localRows = readJson<ContactRecord[]>(CONTACTS_KEY, []);
+  const map = new Map<string, ContactRecord>();
+
+  mernRows.forEach((item) => {
+    if (item && item.id) map.set(item.id, item);
+  });
+
+  localRows.forEach((item) => {
+    if (item && (item.id || (item as any)._id) && !map.has(item.id || (item as any)._id)) {
+      map.set(item.id || (item as any)._id, item);
+    }
+  });
+
+  return Array.from(map.values()).sort((a, b) =>
+    (b.created_at || b.createdAt || "").localeCompare(a.created_at || a.createdAt || "")
+  );
+}
+
+export async function deleteContactRecord(id: string, accessToken?: string): Promise<void> {
+  try {
+    const isMernAlive = await checkBackendHealth();
+    if (isMernAlive) {
+      await apiDeleteContact(id, accessToken);
+    }
+  } catch (err) {
+    console.warn("MERN Delete Contact failed, removing locally", err);
+  }
+
+  const current = readJson<ContactRecord[]>(CONTACTS_KEY, []);
+  writeJson(CONTACTS_KEY, current.filter((c) => (c.id || (c as any)._id) !== id));
+  notifyContactsChanged();
 }
 
 export async function clearAllDemoLeads(accessToken?: string, leadsList: LeadRecord[] = [], bookingsList: BookingRecord[] = []): Promise<void> {

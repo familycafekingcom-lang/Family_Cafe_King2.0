@@ -1,17 +1,99 @@
-import { useEffect } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import {
   X,
   MessageCircle,
   Award,
+  CheckCircle2,
+  Loader2,
+  ArrowRight,
 } from "lucide-react";
 import { waLink } from "../data";
+import { saveBooking, saveLead } from "../lib/database";
 
 interface StaffTrainingModalProps {
   isOpen: boolean;
+  initialScrollToForm?: boolean;
   onClose: () => void;
 }
 
-export function StaffTrainingModal({ isOpen, onClose }: StaffTrainingModalProps) {
+export function StaffTrainingModal({ isOpen, initialScrollToForm = false, onClose }: StaffTrainingModalProps) {
+  const [form, setForm] = useState({
+    name: "",
+    phone: "",
+    email: "",
+    city: "",
+    startDate: "Immediate",
+    notes: "",
+  });
+
+  const [saving, setSaving] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [saveError, setSaveError] = useState("");
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    if (initialScrollToForm) {
+      setTimeout(() => {
+        const el = document.getElementById("staff-training-form");
+        if (el) el.scrollIntoView({ behavior: "smooth" });
+      }, 150);
+    }
+  }, [isOpen, initialScrollToForm]);
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    setSaveError("");
+
+    if (form.name.trim().length < 2) {
+      setSaveError("Please enter a valid full name.");
+      return;
+    }
+    const cleanPhone = form.phone.replace(/\D/g, "");
+    if (cleanPhone.length !== 10) {
+      setSaveError("Please enter a valid 10-digit mobile number.");
+      return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(form.email.trim())) {
+      setSaveError("Please enter a valid email address.");
+      return;
+    }
+    if (form.city.trim().length < 2) {
+      setSaveError("Please enter a valid city / outlet location.");
+      return;
+    }
+
+    setSaving(true);
+
+    try {
+      await Promise.all([
+        saveBooking({
+          name: form.name.trim(),
+          phone: cleanPhone,
+          email: form.email.trim(),
+          city: form.city.trim(),
+          brand: "Staff Training & Support",
+          budget: "₹1.5 Lakh (+ Trainer Expenses)",
+          notes: `Staff Training Booking (Start: ${form.startDate || "Immediate"}): ${form.notes || "6-Month On-site Kitchen Handholding Requested"}`,
+        }),
+        saveLead({
+          name: form.name.trim(),
+          phone: cleanPhone,
+          email: form.email.trim(),
+          city: form.city.trim(),
+          brand: "Staff Training & Support",
+          budget: "₹1.5 Lakh (+ Trainer Expenses)",
+        }),
+      ]);
+
+      setSubmitted(true);
+    } catch (err: any) {
+      setSaveError(err?.message || "Failed to submit training booking. Please try again.");
+    } finally {
+      setSaving(false);
+    }
+  };
   useEffect(() => {
     if (!isOpen) return;
 
@@ -124,6 +206,123 @@ export function StaffTrainingModal({ isOpen, onClose }: StaffTrainingModalProps)
             </div>
           </div>
 
+          {/* Training Menu Section (What we train about) */}
+          <div className="rounded-2xl border border-amber-400/40 bg-gradient-to-br from-amber-500/5 via-orange-500/5 to-rose-500/5 p-5 shadow-sm">
+            <div className="mb-4 flex items-center justify-between">
+              <div>
+                <span className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-orange-700">
+                  Master Training Curriculum
+                </span>
+                <h4 className="font-display text-xl font-bold text-maroon-950">
+                  Menu: What We Train About
+                </h4>
+              </div>
+              <span className="rounded-full bg-amber-500/15 border border-amber-500/30 px-3 py-1 text-xs font-bold text-amber-900">
+                6 Categories
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
+              {/* Paneer Items */}
+              <div className="rounded-xl border border-maroon-900/10 bg-white p-4 shadow-sm hover:shadow-md transition-shadow">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="h-2 w-2 rounded-full bg-amber-500"></span>
+                  <h5 className="font-display text-sm font-bold text-maroon-950 uppercase tracking-wide">
+                    Paneer Items
+                  </h5>
+                </div>
+                <ul className="space-y-1 text-[13px] font-medium text-maroon-900/85">
+                  <li className="flex items-center gap-1.5"><span className="text-amber-600 font-bold">1.</span> Kadhai Paneer</li>
+                  <li className="flex items-center gap-1.5"><span className="text-amber-600 font-bold">2.</span> Shahi Paneer</li>
+                  <li className="flex items-center gap-1.5"><span className="text-amber-600 font-bold">3.</span> Mattar Paneer</li>
+                  <li className="flex items-center gap-1.5"><span className="text-amber-600 font-bold">4.</span> Palak Paneer</li>
+                  <li className="flex items-center gap-1.5"><span className="text-amber-600 font-bold">5.</span> Masala Paneer</li>
+                  <li className="flex items-center gap-1.5"><span className="text-amber-600 font-bold">6.</span> Paneer Do-Pyaaza</li>
+                </ul>
+              </div>
+
+              {/* Mushroom Items */}
+              <div className="rounded-xl border border-maroon-900/10 bg-white p-4 shadow-sm hover:shadow-md transition-shadow">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="h-2 w-2 rounded-full bg-orange-500"></span>
+                  <h5 className="font-display text-sm font-bold text-maroon-950 uppercase tracking-wide">
+                    Mushroom Items
+                  </h5>
+                </div>
+                <ul className="space-y-1 text-[13px] font-medium text-maroon-900/85">
+                  <li className="flex items-center gap-1.5"><span className="text-orange-600 font-bold">1.</span> Mushroom Gravy</li>
+                  <li className="flex items-center gap-1.5"><span className="text-orange-600 font-bold">2.</span> Masala Mushroom</li>
+                  <li className="flex items-center gap-1.5"><span className="text-orange-600 font-bold">3.</span> Kadhai Mushroom</li>
+                  <li className="flex items-center gap-1.5"><span className="text-orange-600 font-bold">4.</span> Shahi Mushroom</li>
+                </ul>
+              </div>
+
+              {/* Dal Items */}
+              <div className="rounded-xl border border-maroon-900/10 bg-white p-4 shadow-sm hover:shadow-md transition-shadow">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="h-2 w-2 rounded-full bg-yellow-500"></span>
+                  <h5 className="font-display text-sm font-bold text-maroon-950 uppercase tracking-wide">
+                    Dal Items
+                  </h5>
+                </div>
+                <ul className="space-y-1 text-[13px] font-medium text-maroon-900/85">
+                  <li className="flex items-center gap-1.5"><span className="text-yellow-600 font-bold">1.</span> Dal Tadka</li>
+                  <li className="flex items-center gap-1.5"><span className="text-yellow-600 font-bold">2.</span> Dal Fry</li>
+                  <li className="flex items-center gap-1.5"><span className="text-yellow-600 font-bold">3.</span> Dal Makhani</li>
+                </ul>
+              </div>
+
+              {/* Complementary */}
+              <div className="rounded-xl border border-maroon-900/10 bg-white p-4 shadow-sm hover:shadow-md transition-shadow">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="h-2 w-2 rounded-full bg-emerald-500"></span>
+                  <h5 className="font-display text-sm font-bold text-maroon-950 uppercase tracking-wide">
+                    Complementary
+                  </h5>
+                </div>
+                <ul className="space-y-1 text-[13px] font-medium text-maroon-900/85">
+                  <li className="flex items-center gap-1.5"><span className="text-emerald-600 font-bold">1.</span> Chana Masala</li>
+                  <li className="flex items-center gap-1.5"><span className="text-emerald-600 font-bold">2.</span> Mix-Veg</li>
+                  <li className="flex items-center gap-1.5"><span className="text-emerald-600 font-bold">3.</span> Rajma</li>
+                  <li className="flex items-center gap-1.5"><span className="text-emerald-600 font-bold">4.</span> Sev Bhaji</li>
+                </ul>
+              </div>
+
+              {/* Rice Items */}
+              <div className="rounded-xl border border-maroon-900/10 bg-white p-4 shadow-sm hover:shadow-md transition-shadow">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="h-2 w-2 rounded-full bg-teal-500"></span>
+                  <h5 className="font-display text-sm font-bold text-maroon-950 uppercase tracking-wide">
+                    Rice Items
+                  </h5>
+                </div>
+                <ul className="space-y-1 text-[13px] font-medium text-maroon-900/85">
+                  <li className="flex items-center gap-1.5"><span className="text-teal-600 font-bold">1.</span> Steam Rice</li>
+                  <li className="flex items-center gap-1.5"><span className="text-teal-600 font-bold">2.</span> Jeera Rice</li>
+                  <li className="flex items-center gap-1.5"><span className="text-teal-600 font-bold">3.</span> Onion Rice</li>
+                  <li className="flex items-center gap-1.5"><span className="text-teal-600 font-bold">4.</span> Pulao</li>
+                </ul>
+              </div>
+
+              {/* Roti / Breads & Thali */}
+              <div className="rounded-xl border border-maroon-900/10 bg-white p-4 shadow-sm hover:shadow-md transition-shadow">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="h-2 w-2 rounded-full bg-rose-500"></span>
+                  <h5 className="font-display text-sm font-bold text-maroon-950 uppercase tracking-wide">
+                    Roti / Breads &amp; Thali
+                  </h5>
+                </div>
+                <ul className="space-y-1 text-[13px] font-medium text-maroon-900/85">
+                  <li className="flex items-center gap-1.5"><span className="text-rose-600 font-bold">•</span> Tawa Roti &amp; Lachha Paratha</li>
+                  <li className="flex items-center gap-1.5"><span className="text-rose-600 font-bold">•</span> Aalu, Paneer &amp; Pyaaz Paratha</li>
+                  <li className="flex items-center gap-1.5"><span className="text-rose-600 font-bold">•</span> Regular Thali</li>
+                  <li className="flex items-center gap-1.5"><span className="text-rose-600 font-bold">•</span> Special Thali</li>
+                  <li className="flex items-center gap-1.5"><span className="text-rose-600 font-bold">•</span> Maharaja Thali</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
           {/* Key Program Pillars */}
           <div>
             <div className="mb-4">
@@ -193,6 +392,168 @@ export function StaffTrainingModal({ isOpen, onClose }: StaffTrainingModalProps)
               </div>
             </div>
           </div>
+
+          {/* Staff Training Direct Booking Form */}
+          <div id="staff-training-form" className="rounded-3xl border-2 border-amber-400/50 bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-rose-500/10 p-6 sm:p-8 shadow-lg">
+            <div className="mb-6 flex items-center gap-3.5 border-b border-maroon-900/10 pb-4">
+              <span className="grid h-12 w-12 flex-shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-amber-500 via-orange-600 to-rose-700 text-white shadow-md">
+                <CheckCircle2 size={24} />
+              </span>
+              <div>
+                <span className="text-[11px] font-extrabold uppercase tracking-wider text-orange-700">
+                  Instant Operational Reservation
+                </span>
+                <h4 className="font-display text-2xl font-black text-maroon-950">
+                  Book Staff Training &amp; Support Program
+                </h4>
+              </div>
+            </div>
+
+            {submitted ? (
+              <div className="grid place-items-center py-8 text-center">
+                <div className="grid h-16 w-16 place-items-center rounded-full bg-gradient-to-br from-emerald-500 to-green-700 text-white shadow-lg">
+                  <CheckCircle2 size={32} strokeWidth={3} />
+                </div>
+                <h3 className="mt-5 font-display text-2xl font-extrabold text-maroon-950">
+                  Staff Training Program Reserved!
+                </h3>
+                <p className="mt-2 max-w-md text-[15px] font-semibold text-maroon-900 leading-relaxed">
+                  Thank you! Your Staff Training &amp; Operational Support booking request has been stored in our system. Our Pan-India training head will contact you within 24 hours.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSubmitted(false);
+                    setSaveError("");
+                  }}
+                  className="mt-6 inline-flex items-center gap-2 rounded-full bg-maroon-950 px-6 py-3 text-[14px] font-bold text-white hover:bg-maroon-900 shadow-md transition cursor-pointer"
+                >
+                  Submit another training booking
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleSubmit} className="space-y-4">
+                {saveError && (
+                  <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-3 text-xs font-bold text-rose-800">
+                    {saveError}
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className="mb-1 block text-xs font-extrabold uppercase tracking-wider text-maroon-950">
+                      Full Name *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={form.name}
+                      onChange={(e) => setForm({ ...form, name: e.target.value.replace(/[^a-zA-Z\s]/g, "") })}
+                      placeholder="e.g. Rahul Sharma"
+                      className="w-full rounded-xl border border-maroon-900/20 bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 placeholder:text-slate-400 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="mb-1 block text-xs font-extrabold uppercase tracking-wider text-maroon-950">
+                      Phone Number * (10 Digits)
+                    </label>
+                    <input
+                      type="tel"
+                      required
+                      maxLength={10}
+                      value={form.phone}
+                      onChange={(e) => setForm({ ...form, phone: e.target.value.replace(/\D/g, "").slice(0, 10) })}
+                      placeholder="e.g. 9876543210"
+                      className="w-full rounded-xl border border-maroon-900/20 bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 placeholder:text-slate-400 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className="mb-1 block text-xs font-extrabold uppercase tracking-wider text-maroon-950">
+                      Email Address *
+                    </label>
+                    <input
+                      type="email"
+                      required
+                      value={form.email}
+                      onChange={(e) => setForm({ ...form, email: e.target.value.trim() })}
+                      placeholder="rahul@example.com"
+                      className="w-full rounded-xl border border-maroon-900/20 bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 placeholder:text-slate-400 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="mb-1 block text-xs font-extrabold uppercase tracking-wider text-maroon-950">
+                      City / Outlet Location *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={form.city}
+                      onChange={(e) => setForm({ ...form, city: e.target.value.replace(/[^a-zA-Z\s,-]/g, "") })}
+                      placeholder="e.g. Varanasi / Lucknow"
+                      className="w-full rounded-xl border border-maroon-900/20 bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 placeholder:text-slate-400 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className="mb-1 block text-xs font-extrabold uppercase tracking-wider text-maroon-950">
+                      Target Training Start Timeline
+                    </label>
+                    <select
+                      value={form.startDate}
+                      onChange={(e) => setForm({ ...form, startDate: e.target.value })}
+                      className="w-full rounded-xl border border-maroon-900/20 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+                    >
+                      <option value="Immediate">Immediate (Within 7 Days)</option>
+                      <option value="1 Week">1 Week</option>
+                      <option value="2 Weeks">2 Weeks</option>
+                      <option value="3 Weeks">3 Weeks</option>
+                      <option value="15 Days">15 Days</option>
+                      <option value="1 Month">1 Month</option>
+                      <option value="2 Months">2 Months</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="mb-1 block text-xs font-extrabold uppercase tracking-wider text-maroon-950">
+                      Additional Requirements / Notes
+                    </label>
+                    <input
+                      type="text"
+                      value={form.notes}
+                      onChange={(e) => setForm({ ...form, notes: e.target.value })}
+                      placeholder="e.g. Number of kitchen staff, outlet size"
+                      className="w-full rounded-xl border border-maroon-900/20 bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 placeholder:text-slate-400 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+                    />
+                  </div>
+                </div>
+
+                <div className="pt-2">
+                  <button
+                    type="submit"
+                    disabled={saving}
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-amber-500 via-orange-600 to-rose-700 px-6 py-4 text-base font-extrabold text-white shadow-lg shadow-orange-500/30 transition hover:brightness-110 disabled:opacity-50 cursor-pointer"
+                  >
+                    {saving ? (
+                      <>
+                        <Loader2 size={18} className="animate-spin" /> Saving Booking...
+                      </>
+                    ) : (
+                      <>
+                        Confirm Staff Training Booking <ArrowRight size={18} />
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
         </div>
 
         {/* Modal Footer CTA */}
@@ -215,13 +576,15 @@ export function StaffTrainingModal({ isOpen, onClose }: StaffTrainingModalProps)
             >
               <MessageCircle size={15} /> WhatsApp Support
             </a>
-            <a
-              href="#lead"
-              onClick={onClose}
+            <button
+              onClick={() => {
+                const el = document.getElementById("staff-training-form");
+                if (el) el.scrollIntoView({ behavior: "smooth" });
+              }}
               className="inline-flex items-center gap-1.5 rounded-2xl bg-gradient-to-br from-amber-500 via-orange-600 to-rose-700 px-5 py-2.5 text-[13px] font-extrabold text-white shadow-md shadow-orange-500/30 transition hover:brightness-110 cursor-pointer"
             >
               Book Program Now
-            </a>
+            </button>
           </div>
         </div>
       </div>

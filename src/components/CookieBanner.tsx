@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Cookie, Check, ShieldCheck } from "lucide-react";
-import { saveLead } from "../lib/database";
+import { saveContact } from "../lib/database";
 
 interface CookieConsentProps {
   onOpenPrivacy?: () => void;
@@ -10,7 +10,14 @@ export function CookieBanner({ onOpenPrivacy }: CookieConsentProps) {
   const [show, setShow] = useState(false);
 
   useEffect(() => {
-    // Show banner smoothly on load
+    // Check if user has already accepted or configured cookie consent on this browser
+    const existingConsent = localStorage.getItem("fck_cookie_consent_v1") || localStorage.getItem("cookie_consent");
+    if (existingConsent) {
+      setShow(false);
+      return;
+    }
+
+    // Show banner smoothly on load if no consent found
     const timer = setTimeout(() => setShow(true), 400);
     return () => clearTimeout(timer);
   }, []);
@@ -27,52 +34,56 @@ export function CookieBanner({ onOpenPrivacy }: CookieConsentProps) {
     return `${device} (${window.screen.width}x${window.screen.height})`;
   };
 
-  const handleAcceptAll = async () => {
-    const deviceInfo = detectDeviceInfo();
-
+  const handleAcceptAll = () => {
+    // 1. Immediately hide banner & update localStorage instantly for zero lag UI response
+    setShow(false);
     try {
       localStorage.setItem(
         "fck_cookie_consent_v1",
         JSON.stringify({ necessary: true, analytics: true, marketing: true, date: new Date().toISOString() })
       );
-
-      // Store visitor session lead telemetry into Dashboard
-      await saveLead({
-        name: `Cookie Visitor (${deviceInfo.split(" ")[0]})`,
-        phone: "+91 99999 00000",
-        email: "cookie.visitor@familycafeking.com",
-        city: "Live Site Visitor",
-        brand: "Family Cafe King",
-        budget: `Accepted All Cookies (${deviceInfo})`,
-      });
     } catch (err) {
       console.warn("Consent storage error:", err);
     }
-    setShow(false);
+
+    // 2. Fire telemetry in background asynchronously ONLY to Direct Contact Inquiries
+    const deviceInfo = detectDeviceInfo();
+    const visitorName = `Cookie Visitor (${deviceInfo.split(" ")[0]})`;
+    const details = `Accepted All Cookies (${deviceInfo})`;
+
+    saveContact({
+      name: visitorName,
+      phone: "+91 99999 00000",
+      email: "cookie.visitor@familycafeking.com",
+      subject: "Cookie Consent Telemetry",
+      message: `${details} - Time: ${new Date().toLocaleString()}`,
+    }).catch(() => {});
   };
 
-  const handleNecessaryOnly = async () => {
-    const deviceInfo = detectDeviceInfo();
-
+  const handleNecessaryOnly = () => {
+    // 1. Immediately hide banner & update localStorage instantly for zero lag UI response
+    setShow(false);
     try {
       localStorage.setItem(
         "fck_cookie_consent_v1",
         JSON.stringify({ necessary: true, analytics: false, marketing: false, date: new Date().toISOString() })
       );
-
-      // Store necessary visitor session telemetry into Dashboard
-      await saveLead({
-        name: `Cookie Visitor (Necessary)`,
-        phone: "+91 99999 00000",
-        email: "necessary.visitor@familycafeking.com",
-        city: "Live Site Visitor",
-        brand: "Family Cafe King",
-        budget: `Necessary Only (${deviceInfo})`,
-      });
     } catch (err) {
       console.warn("Consent storage error:", err);
     }
-    setShow(false);
+
+    // 2. Fire telemetry in background asynchronously ONLY to Direct Contact Inquiries
+    const deviceInfo = detectDeviceInfo();
+    const visitorName = `Cookie Visitor (Necessary)`;
+    const details = `Necessary Only (${deviceInfo})`;
+
+    saveContact({
+      name: visitorName,
+      phone: "+91 99999 00000",
+      email: "necessary.visitor@familycafeking.com",
+      subject: "Cookie Consent Necessary Only",
+      message: `${details} - Time: ${new Date().toLocaleString()}`,
+    }).catch(() => {});
   };
 
   if (!show) return null;

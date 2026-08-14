@@ -30,6 +30,7 @@ import { StaffTrainingModal } from "./components/StaffTrainingModal";
 import { CityBookingModal } from "./components/CityBookingModal";
 import { UpcomingLaunches } from "./components/UpcomingLaunches";
 import { AdminPortal } from "./components/AdminPortal";
+import { InitialLoader } from "./components/InitialLoader";
 import { DEFAULT_SLIDES, listSlides, saveLead, trackVisitor, type SlideRecord } from "./lib/database";
 import {
   BRANDS,
@@ -106,7 +107,7 @@ function Nav() {
       className={`fixed inset-x-0 top-0 z-50 transition-all duration-500 ${scrolled
         ? "backdrop-blur-xl bg-cream-50/90 border-b border-maroon-900/15 shadow-[0_10px_40px_-20px_rgba(91,20,20,0.3)]"
         : "bg-transparent"
-      }`}
+        }`}
     >
       <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-3 sm:px-8 sm:py-4">
         {/* Logo */}
@@ -859,34 +860,34 @@ function Showcase({ onOpenBrand }: { onOpenBrand: (brand: BrandData) => void }) 
           </Reveal>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 md:grid-cols-3 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-3 lg:grid-cols-4">
           {showcaseItems.map((it, k) => {
             const brandObj = BRANDS.find((b) => b.key === it.brandKey) || BRANDS[0];
             return (
               <Reveal key={it.name} delay={k * 60} className="h-full">
                 <article
                   onClick={() => onOpenBrand(brandObj)}
-                  className="lift group relative flex h-full cursor-pointer flex-col overflow-hidden rounded-3xl border border-maroon-900/15 bg-white p-4 shadow-2xs transition hover:border-orange-500/40"
+                  className="lift group relative flex h-full cursor-pointer flex-col overflow-hidden rounded-2xl sm:rounded-3xl border border-maroon-900/15 bg-white p-2.5 sm:p-4 shadow-2xs transition hover:border-orange-500/40"
                 >
-                  <div className={`relative aspect-square w-full overflow-hidden rounded-2xl bg-gradient-to-br ${it.grad}`}>
+                  <div className={`relative aspect-square w-full overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-br ${it.grad}`}>
                     <img
                       src={it.image}
                       alt={it.name}
                       className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
                     />
-                    <div className="absolute left-3 top-3 rounded-full bg-white/95 px-2.5 py-0.5 text-[10.5px] font-extrabold uppercase tracking-wider text-maroon-950 shadow-xs backdrop-blur-md">
+                    <div className="absolute left-2 top-2 sm:left-3 sm:top-3 rounded-full bg-white/95 px-2 py-0.5 text-[9px] sm:text-[10.5px] font-extrabold uppercase tracking-wider text-maroon-950 shadow-xs backdrop-blur-md">
                       {it.tag}
                     </div>
                   </div>
-                  <div className="mt-4 flex flex-1 items-start justify-between gap-2">
+                  <div className="mt-2.5 sm:mt-4 flex flex-1 items-start justify-between gap-1.5 sm:gap-2">
                     <div>
-                      <h3 className="font-display text-[16.5px] font-bold leading-tight text-maroon-950">{it.name}</h3>
-                      <p className="mt-1 text-[12px] font-bold uppercase tracking-wider text-amber-900">
+                      <h3 className="font-display text-[13.5px] sm:text-[16.5px] font-bold leading-tight text-maroon-950">{it.name}</h3>
+                      <p className="mt-0.5 sm:mt-1 text-[10px] sm:text-[12px] font-bold uppercase tracking-wider text-amber-900">
                         {brandObj.name}
                       </p>
                     </div>
-                    <span className="grid h-8 w-8 flex-shrink-0 place-items-center rounded-full bg-maroon-900/10 text-maroon-950 transition group-hover:bg-amber-500 group-hover:text-white">
-                      <ArrowUpRight size={16} />
+                    <span className="grid h-6.5 w-6.5 sm:h-8 sm:w-8 flex-shrink-0 place-items-center rounded-full bg-maroon-900/10 text-maroon-950 transition group-hover:bg-amber-500 group-hover:text-white">
+                      <ArrowUpRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                     </span>
                   </div>
                 </article>
@@ -980,7 +981,13 @@ function Benefits() {
 
 
 /* ---------- STAFF TRAINING & SUPPORT ---------- */
-function StaffTraining({ onOpenDetails }: { onOpenDetails: () => void }) {
+function StaffTraining({
+  onOpenDetails,
+  onOpenBooking,
+}: {
+  onOpenDetails: () => void;
+  onOpenBooking: () => void;
+}) {
   return (
     <section id="training" className="relative overflow-hidden bg-gradient-to-b from-cream-50 via-amber-50/50 to-cream-50 py-20 sm:py-28">
       <div className="pointer-events-none absolute inset-0 -z-10 opacity-30 bg-grain" />
@@ -1031,13 +1038,20 @@ function StaffTraining({ onOpenDetails }: { onOpenDetails: () => void }) {
                   ))}
                 </div>
               </div>
-              <div className="mt-6 border-t border-maroon-900/10 pt-4">
+              <div className="mt-6 border-t border-maroon-900/10 pt-4 flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={onOpenBooking}
+                  className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-2xl border border-maroon-900/20 bg-maroon-950 px-4 py-3 text-[13.5px] font-extrabold text-white shadow-md transition hover:bg-maroon-900 hover:-translate-y-0.5 cursor-pointer"
+                >
+                  <Award size={15} /> Book Program
+                </button>
                 <button
                   type="button"
                   onClick={onOpenDetails}
-                  className="group/btn inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-br from-amber-500 via-orange-600 to-rose-700 px-5 py-3 text-[14px] font-bold text-white shadow-md shadow-orange-500/20 transition hover:shadow-orange-500/40 hover:-translate-y-0.5 cursor-pointer"
+                  className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-2xl bg-gradient-to-br from-amber-500 via-orange-600 to-rose-700 px-4 py-3 text-[13.5px] font-extrabold text-white shadow-md shadow-orange-500/20 transition hover:shadow-orange-500/40 hover:-translate-y-0.5 cursor-pointer"
                 >
-                  <Eye size={16} /> View Details
+                  <Eye size={15} /> View Details
                 </button>
               </div>
             </div>
@@ -1064,13 +1078,20 @@ function StaffTraining({ onOpenDetails }: { onOpenDetails: () => void }) {
                   </p>
                 </div>
               </div>
-              <div className="mt-6 border-t border-maroon-900/10 pt-4">
+              <div className="mt-6 border-t border-maroon-900/10 pt-4 flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={onOpenBooking}
+                  className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-2xl border border-maroon-900/20 bg-maroon-950 px-4 py-3 text-[13.5px] font-extrabold text-white shadow-md transition hover:bg-maroon-900 hover:-translate-y-0.5 cursor-pointer"
+                >
+                  <Award size={15} /> Book Program
+                </button>
                 <button
                   type="button"
                   onClick={onOpenDetails}
-                  className="group/btn inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-br from-amber-500 via-orange-600 to-rose-700 px-5 py-3 text-[14px] font-bold text-white shadow-md shadow-orange-500/20 transition hover:shadow-orange-500/40 hover:-translate-y-0.5 cursor-pointer"
+                  className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-2xl bg-gradient-to-br from-amber-500 via-orange-600 to-rose-700 px-4 py-3 text-[13.5px] font-extrabold text-white shadow-md shadow-orange-500/20 transition hover:shadow-orange-500/40 hover:-translate-y-0.5 cursor-pointer"
                 >
-                  <Eye size={16} /> View Details
+                  <Eye size={15} /> View Details
                 </button>
               </div>
             </div>
@@ -1104,13 +1125,20 @@ function StaffTraining({ onOpenDetails }: { onOpenDetails: () => void }) {
                   </ul>
                 </div>
               </div>
-              <div className="mt-6 border-t border-maroon-900/10 pt-4">
+              <div className="mt-6 border-t border-maroon-900/10 pt-4 flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={onOpenBooking}
+                  className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-2xl border border-maroon-900/20 bg-maroon-950 px-4 py-3 text-[13.5px] font-extrabold text-white shadow-md transition hover:bg-maroon-900 hover:-translate-y-0.5 cursor-pointer"
+                >
+                  <Award size={15} /> Book Program
+                </button>
                 <button
                   type="button"
                   onClick={onOpenDetails}
-                  className="group/btn inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-br from-amber-500 via-orange-600 to-rose-700 px-5 py-3 text-[14px] font-bold text-white shadow-md shadow-orange-500/20 transition hover:shadow-orange-500/40 hover:-translate-y-0.5 cursor-pointer"
+                  className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-2xl bg-gradient-to-br from-amber-500 via-orange-600 to-rose-700 px-4 py-3 text-[13.5px] font-extrabold text-white shadow-md shadow-orange-500/20 transition hover:shadow-orange-500/40 hover:-translate-y-0.5 cursor-pointer"
                 >
-                  <Eye size={16} /> View Details
+                  <Eye size={15} /> View Details
                 </button>
               </div>
             </div>
@@ -1215,8 +1243,8 @@ function PricingCard({ plan: p }: { plan: (typeof PLANS)[number] }) {
       onClick={handleClick}
       onKeyDown={(e) => e.key === "Enter" && handleClick()}
       className={`relative flex h-full flex-col overflow-hidden rounded-3xl p-8 backdrop-blur transition-all duration-500 ease-out cursor-pointer select-none ${isActive
-          ? "-translate-y-2.5 shadow-[0_35px_75px_-15px_rgba(217,115,20,0.45)]"
-          : ""
+        ? "-translate-y-2.5 shadow-[0_35px_75px_-15px_rgba(217,115,20,0.45)]"
+        : ""
         } ${p.highlighted
           ? `border-2 shadow-[0_20px_50px_-15px_rgba(217,115,20,0.3)] ${isActive
             ? "border-amber-400 bg-gradient-to-br from-[#1D0609] via-[#2F0A0E] to-[#170406]"
@@ -1232,8 +1260,8 @@ function PricingCard({ plan: p }: { plan: (typeof PLANS)[number] }) {
       {p.ribbon && (
         <div
           className={`absolute right-6 top-6 rounded-full px-3.5 py-1 text-[11px] font-extrabold uppercase tracking-wider shadow-md transition-all duration-500 ${isActive
-              ? "scale-110 bg-gradient-to-br from-amber-400 to-amber-500 text-maroon-950"
-              : "bg-gradient-to-br from-amber-500 to-orange-600 text-white"
+            ? "scale-110 bg-gradient-to-br from-amber-400 to-amber-500 text-maroon-950"
+            : "bg-gradient-to-br from-amber-500 to-orange-600 text-white"
             }`}
         >
           {p.ribbon}
@@ -1282,12 +1310,12 @@ function PricingCard({ plan: p }: { plan: (typeof PLANS)[number] }) {
           >
             <span
               className={`mt-0.5 grid h-5 w-5 flex-shrink-0 place-items-center rounded-full transition-all duration-500 ${p.highlighted
-                  ? isActive
-                    ? "scale-110 bg-amber-400 text-maroon-950"
-                    : "bg-gradient-to-br from-amber-500 to-orange-600 text-white"
-                  : isActive
-                    ? "scale-110 bg-amber-400 text-maroon-950"
-                    : "bg-maroon-900/10 text-maroon-950"
+                ? isActive
+                  ? "scale-110 bg-amber-400 text-maroon-950"
+                  : "bg-gradient-to-br from-amber-500 to-orange-600 text-white"
+                : isActive
+                  ? "scale-110 bg-amber-400 text-maroon-950"
+                  : "bg-maroon-900/10 text-maroon-950"
                 }`}
             >
               <Check size={12} strokeWidth={3} />
@@ -1302,12 +1330,12 @@ function PricingCard({ plan: p }: { plan: (typeof PLANS)[number] }) {
         href="#lead"
         onClick={(e) => e.stopPropagation()}
         className={`mt-8 inline-flex items-center justify-center gap-2 rounded-full px-6 py-3.5 text-[14.5px] font-extrabold transition-all duration-500 shadow-md ${p.highlighted
-            ? isActive
-              ? "scale-[1.02] bg-gradient-to-br from-amber-400 to-orange-500 text-maroon-950 shadow-amber-500/40"
-              : "bg-gradient-to-br from-amber-500 via-orange-600 to-rose-700 text-white shadow-xl shadow-orange-500/30"
-            : isActive
-              ? "scale-[1.02] border-transparent bg-gradient-to-br from-amber-400 to-orange-500 text-maroon-950 shadow-lg shadow-amber-500/30"
-              : "border border-maroon-900/20 bg-white text-maroon-950"
+          ? isActive
+            ? "scale-[1.02] bg-gradient-to-br from-amber-400 to-orange-500 text-maroon-950 shadow-amber-500/40"
+            : "bg-gradient-to-br from-amber-500 via-orange-600 to-rose-700 text-white shadow-xl shadow-orange-500/30"
+          : isActive
+            ? "scale-[1.02] border-transparent bg-gradient-to-br from-amber-400 to-orange-500 text-maroon-950 shadow-lg shadow-amber-500/30"
+            : "border border-maroon-900/20 bg-white text-maroon-950"
           }`}
       >
         {p.cta}
@@ -1427,7 +1455,7 @@ function LeadCTA({ initialBrand }: { initialBrand?: string }) {
     phone: "",
     email: "",
     city: "",
-    brand: initialBrand || BRANDS[0].name,
+    brand: initialBrand || BRANDS.find((b) => b.key !== "fck")?.name || "Chai Cafe King",
     budget: "₹3 Lakhs ",
   });
 
@@ -1480,7 +1508,7 @@ function LeadCTA({ initialBrand }: { initialBrand?: string }) {
         phone: "",
         email: "",
         city: "",
-        brand: BRANDS[0].name,
+        brand: BRANDS.find((b) => b.key !== "fck")?.name || "Chai Cafe King",
         budget: "₹3 Lakhs",
       });
     } catch (err: any) {
@@ -1631,7 +1659,7 @@ function LeadCTA({ initialBrand }: { initialBrand?: string }) {
                         label="Preferred Brand"
                         value={form.brand}
                         onChange={(v) => setForm({ ...form, brand: v })}
-                        options={[...BRANDS.map((b) => b.name), "Multi-Brand Flagship"]}
+                        options={[...BRANDS.filter((b) => b.key !== "fck").map((b) => b.name), "Multi-Brand Flagship"]}
                       />
                     </div>
                     <SelectField
@@ -1927,7 +1955,18 @@ function WhatsAppChatButton() {
 /* ---------- MAIN APP ---------- */
 export default function App() {
   const [selectedBrand, setSelectedBrand] = useState<BrandData | null>(null);
-  const [trainingModalOpen, setTrainingModalOpen] = useState(false);
+  const [trainingModalState, setTrainingModalState] = useState<{
+    isOpen: boolean;
+    scrollToForm?: boolean;
+  }>({ isOpen: false });
+
+  const handleOpenTrainingDetails = () => {
+    setTrainingModalState({ isOpen: true, scrollToForm: false });
+  };
+
+  const handleOpenTrainingBooking = () => {
+    setTrainingModalState({ isOpen: true, scrollToForm: true });
+  };
   const [leadBrand, setLeadBrand] = useState<string | undefined>(undefined);
   const [legalType, setLegalType] = useState<"privacy" | "terms" | null>(null);
   const [cityBookingState, setCityBookingState] = useState<{
@@ -1942,13 +1981,20 @@ export default function App() {
   };
 
   const [isAdminRoute, setIsAdminRoute] = useState(checkPortalRoute);
+  const [appLoading, setAppLoading] = useState(true);
 
   useEffect(() => {
     trackVisitor();
+    const timer = setTimeout(() => setAppLoading(false), 600);
+    return () => clearTimeout(timer);
   }, []);
 
   useEffect(() => {
-    const onHashChange = () => setIsAdminRoute(checkPortalRoute());
+    const onHashChange = () => {
+      setAppLoading(true);
+      setIsAdminRoute(checkPortalRoute());
+      setTimeout(() => setAppLoading(false), 500);
+    };
     window.addEventListener("hashchange", onHashChange);
     return () => window.removeEventListener("hashchange", onHashChange);
   }, []);
@@ -1969,6 +2015,10 @@ export default function App() {
     }
   };
 
+  if (appLoading) {
+    return <InitialLoader />;
+  }
+
   if (isAdminRoute) {
     return <AdminPortal />;
   }
@@ -1981,10 +2031,13 @@ export default function App() {
         <SocialProof />
         <UpcomingLaunches onOpenCityBooking={handleOpenCityBooking} />
         <Brands onOpenBrand={handleOpenBrand} />
+        <StaffTraining
+          onOpenDetails={handleOpenTrainingDetails}
+          onOpenBooking={handleOpenTrainingBooking}
+        />
         <Features />
         <Showcase onOpenBrand={handleOpenBrand} />
         <Benefits />
-        <StaffTraining onOpenDetails={() => setTrainingModalOpen(true)} />
         <Testimonials />
         <Pricing />
         <FAQ />
@@ -2005,8 +2058,9 @@ export default function App() {
 
       {/* Staff Training Details Deck Modal */}
       <StaffTrainingModal
-        isOpen={trainingModalOpen}
-        onClose={() => setTrainingModalOpen(false)}
+        isOpen={trainingModalState.isOpen}
+        initialScrollToForm={trainingModalState.scrollToForm}
+        onClose={() => setTrainingModalState({ isOpen: false })}
       />
 
       {/* Privacy Policy & Terms Modal */}
