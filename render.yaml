@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: Family_Cafe_King2.0
+    env: node
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
