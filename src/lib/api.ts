@@ -128,6 +128,7 @@ export async function checkBackendHealth(): Promise<boolean> {
   }
 
   const urlsToTry = [
+    "/api/health",
     `${API_BASE}/health`,
     "http://localhost:5000/api/health",
   ];
@@ -135,7 +136,7 @@ export async function checkBackendHealth(): Promise<boolean> {
   for (const url of urlsToTry) {
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 2500);
+      const timeoutId = setTimeout(() => controller.abort(), 6000);
       const res = await fetch(url, { signal: controller.signal });
       clearTimeout(timeoutId);
       if (res.ok) {
@@ -143,7 +144,7 @@ export async function checkBackendHealth(): Promise<boolean> {
         return true;
       }
     } catch {
-      // Try next
+      // Try next URL
     }
   }
 
