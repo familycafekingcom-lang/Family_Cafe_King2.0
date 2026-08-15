@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ArrowLeft,
+  Award,
   Calendar,
   CheckCircle2,
   Clock,
@@ -39,6 +40,7 @@ import {
   deleteLaunch,
   deleteLead,
   deleteSlide,
+  deleteTrainingRecord,
   getVisitorStats,
   listBookings,
   listContacts,
@@ -46,6 +48,7 @@ import {
   listLaunches,
   listLeads,
   listSlides,
+  listTraining,
   saveLaunch,
   saveSlide,
   seedDefaultSlides,
@@ -53,10 +56,12 @@ import {
   updateLaunch,
   updateLead,
   updateSlide,
+  updateTrainingRecord,
   type LaunchRecord,
   type LeadRecord,
   type LeadStatus,
   type SlideRecord,
+  type TrainingRecord,
   type VisitorStats,
 } from "../lib/database";
 import {
@@ -128,12 +133,13 @@ export function AdminPortal() {
   const [authError, setAuthError] = useState("");
   const [authLoading, setAuthLoading] = useState(false);
 
-  const [activeTab, setActiveTab] = useState<"overview" | "leads" | "launches" | "slides" | "bookings" | "contacts">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "leads" | "training" | "launches" | "slides" | "bookings" | "contacts">("overview");
   const [isMernOnline, setIsMernOnline] = useState<boolean | null>(null);
 
   const [visitorStats, setVisitorStats] = useState<VisitorStats>(() => getVisitorStats());
 
   const [leads, setLeads] = useState<LeadRecord[]>([]);
+  const [trainings, setTrainings] = useState<TrainingRecord[]>([]);
   const [launches, setLaunches] = useState<LaunchRecord[]>([]);
   const [slides, setSlides] = useState<SlideRecord[]>([]);
   const [bookings, setBookings] = useState<MernBooking[]>([]);
@@ -189,13 +195,15 @@ export function AdminPortal() {
 
     try {
       // Parallel non-blocking fetches
-      const [leadRows, launchRows, slideRows] = await Promise.all([
+      const [leadRows, trainingRows, launchRows, slideRows] = await Promise.all([
         listLeads(session.accessToken).catch(() => []),
+        listTraining(session.accessToken).catch(() => []),
         listLaunches(session.accessToken).catch(() => []),
         listSlides(session.accessToken).catch(() => []),
       ]);
 
       setLeads(leadRows);
+      setTrainings(trainingRows as TrainingRecord[]);
       setLaunches(launchRows);
       setSlides(slideRows);
 
@@ -224,12 +232,14 @@ export function AdminPortal() {
     const handleUpdate = () => void loadData();
     window.addEventListener("fck_bookings_updated", handleUpdate);
     window.addEventListener("fck_leads_updated", handleUpdate);
+    window.addEventListener("fck_training_updated", handleUpdate);
     window.addEventListener("fck_contacts_updated", handleUpdate);
     window.addEventListener("storage", handleUpdate);
 
     return () => {
       window.removeEventListener("fck_bookings_updated", handleUpdate);
       window.removeEventListener("fck_leads_updated", handleUpdate);
+      window.removeEventListener("fck_training_updated", handleUpdate);
       window.removeEventListener("fck_contacts_updated", handleUpdate);
       window.removeEventListener("storage", handleUpdate);
     };
@@ -255,6 +265,37 @@ export function AdminPortal() {
     [leads]
   );
 
+  const filteredTrainings = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return trainings.filter((t) => {
+      const text = [t.name, t.phone, t.email, t.city, t.brand, t.notes, t.startDate, t.status, t.heading]
+        .join(" ")
+        .toLowerCase();
+      return !q || text.includes(q);
+    });
+  }, [trainings, query]);
+
+  const removeTraining = async (id: string) => {
+    if (!window.confirm("Are you sure you want to delete this training record?")) return;
+    try {
+      await deleteTrainingRecord(id, session?.accessToken);
+      setTrainings((prev) => prev.filter((t) => t.id !== id && (t as any)._id !== id));
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to delete training record");
+    }
+  };
+
+  const changeTrainingStatus = async (id: string, newStatus: string) => {
+    try {
+      await updateTrainingRecord(id, { status: newStatus }, session?.accessToken);
+      setTrainings((prev) =>
+        prev.map((t) => (t.id === id || (t as any)._id === id ? { ...t, status: newStatus } : t))
+      );
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to update status");
+    }
+  };
+
   const stats = useMemo(
     () => ({
       total: leads.length,
@@ -263,12 +304,13 @@ export function AdminPortal() {
       interested: leads.filter((lead) => lead.status === "Interested").length,
       converted: leads.filter((lead) => lead.status === "Converted").length,
       lost: leads.filter((lead) => lead.status === "Lost").length,
+      trainingsCount: trainings.length,
       launchesCount: launches.length,
       slidesCount: slides.length,
       bookingsCount: bookings.length,
       contactsCount: contacts.length,
     }),
-    [leads, launches, slides, bookings, contacts]
+    [leads, trainings, launches, slides, bookings, contacts]
   );
 
 
@@ -666,9 +708,10 @@ export function AdminPortal() {
             {[
               { id: "overview", label: "Overview", icon: <TrendingUp size={15} /> },
               { id: "leads", label: `Franchise Leads (${stats.total})`, icon: <Users size={15} /> },
+              { id: "training", label: `Staff Training (${stats.trainingsCount})`, icon: <Award size={15} /> },
               { id: "slides", label: `Hero Slider (${stats.slidesCount})`, icon: <Sliders size={15} /> },
               { id: "launches", label: `Upcoming Launches (${stats.launchesCount})`, icon: <MapPin size={15} /> },
-              { id: "bookings", label: `Territory & Training Bookings (${stats.bookingsCount})`, icon: <Calendar size={15} /> },
+              { id: "bookings", label: `Territory Bookings (${stats.bookingsCount})`, icon: <Calendar size={15} /> },
               { id: "contacts", label: `Inquiries (${stats.contactsCount})`, icon: <Inbox size={15} /> },
             ].map((tab) => (
               <button
@@ -971,6 +1014,105 @@ export function AdminPortal() {
                     </div>
                   </div>
                 </article>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* STAFF TRAINING TAB */}
+        {activeTab === "training" && (
+          <div className={`rounded-3xl border p-6 backdrop-blur-xl ${
+            isNight ? "border-slate-800 bg-slate-900/60" : "border-amber-200/80 bg-white/90 shadow-xl shadow-amber-950/5"
+          }`}>
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
+              <div>
+                <h2 className={`font-display text-xl font-black ${isNight ? "text-white" : "text-slate-900"}`}>
+                  Staff Training & Kitchen Support Applications
+                </h2>
+                <p className={`text-xs font-medium ${isNight ? "text-slate-400" : "text-amber-900/70"}`}>
+                  Direct training bookings submitted via the Staff Training modal.
+                </p>
+              </div>
+              <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-xs font-extrabold text-amber-500">
+                {trainings.length} Total Training Bookings
+              </span>
+            </div>
+
+            <div className="space-y-4">
+              {filteredTrainings.length === 0 && (
+                <div className={`rounded-2xl border border-dashed px-5 py-12 text-center ${
+                  isNight ? "border-slate-800 bg-slate-950" : "border-amber-200 bg-amber-50/40"
+                }`}>
+                  <Award size={28} className="mx-auto text-amber-500 mb-2" />
+                  <p className={`text-sm font-bold ${isNight ? "text-slate-400" : "text-amber-900/70"}`}>
+                    No staff training bookings submitted yet.
+                  </p>
+                </div>
+              )}
+
+              {filteredTrainings.map((t) => (
+                <div key={(t as any)._id || t.id} className={`flex flex-wrap items-start justify-between gap-4 rounded-2xl border p-4 transition-all ${
+                  isNight ? "border-slate-800 bg-slate-950 hover:border-amber-500/40" : "border-amber-200/80 bg-white shadow-sm hover:border-amber-300"
+                }`}>
+                  <div className="space-y-1.5 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3 className={`font-bold text-base capitalize ${isNight ? "text-white" : "text-slate-900"}`}>
+                        {t.name || t.heading || "Trainee Candidate"}
+                      </h3>
+                      {t.phone && (
+                        <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-0.5 text-xs font-bold text-amber-500">
+                          📞 {t.phone}
+                        </span>
+                      )}
+                      {t.email && (
+                        <span className={`text-xs ${isNight ? "text-slate-400" : "text-amber-900/70"}`}>
+                          ✉️ {t.email}
+                        </span>
+                      )}
+                    </div>
+
+                    <p className={`text-xs font-semibold ${isNight ? "text-slate-300" : "text-amber-900/90"}`}>
+                      Program: <span className="text-amber-500 font-extrabold">{t.brand || t.heading || "Staff Training & Support"}</span>
+                      {t.city && <> · City: <span className="font-extrabold text-emerald-400">{t.city}</span></>}
+                      {t.startDate && <> · Start Date: <span className="font-extrabold text-sky-400">{t.startDate}</span></>}
+                      {t.budget && <> · Package Charge: <span className="font-extrabold text-amber-400">{t.budget}</span></>}
+                      {t.created_at && <> · Date: {new Date(t.created_at).toLocaleDateString("en-IN")}</>}
+                    </p>
+
+                    {t.notes && (
+                      <p className={`mt-2 text-xs italic p-2.5 rounded-xl border ${
+                        isNight ? "bg-slate-900 border-slate-800 text-amber-300" : "bg-amber-50 border-amber-200 text-amber-950 font-medium"
+                      }`}>
+                        "{t.notes}"
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2">
+                    <select
+                      value={t.status || "New"}
+                      onChange={(e) => void changeTrainingStatus(((t as any)._id || t.id)!, e.target.value)}
+                      className={`rounded-xl border px-3 py-1.5 text-xs font-bold transition-all cursor-pointer outline-none ${
+                        isNight
+                          ? "bg-slate-900 border-slate-700 text-amber-400 hover:bg-slate-800 focus:border-amber-500"
+                          : "bg-amber-50 border-amber-300 text-amber-950 hover:bg-amber-100 focus:border-amber-500"
+                      }`}
+                    >
+                      <option value="New">New</option>
+                      <option value="Contacted">Contacted</option>
+                      <option value="Confirmed">Confirmed</option>
+                      <option value="Completed">Completed</option>
+                      <option value="Cancelled">Cancelled</option>
+                    </select>
+
+                    <button
+                      onClick={() => void removeTraining(((t as any)._id || t.id)!)}
+                      className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-1.5 text-xs font-bold text-rose-500 hover:bg-rose-500/20 cursor-pointer"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
               ))}
             </div>
           </div>

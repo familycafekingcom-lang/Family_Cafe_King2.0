@@ -8,7 +8,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { waLink } from "../data";
-import { saveBooking, saveLead } from "../lib/database";
+import { saveTraining } from "../lib/database";
 
 interface StaffTrainingModalProps {
   isOpen: boolean;
@@ -67,25 +67,17 @@ export function StaffTrainingModal({ isOpen, initialScrollToForm = false, onClos
     setSaving(true);
 
     try {
-      await Promise.all([
-        saveBooking({
-          name: form.name.trim(),
-          phone: cleanPhone,
-          email: form.email.trim(),
-          city: form.city.trim(),
-          brand: "Staff Training & Support",
-          budget: "₹1.5 Lakh (+ Trainer Expenses)",
-          notes: `Staff Training Booking (Start: ${form.startDate || "Immediate"}): ${form.notes || "6-Month On-site Kitchen Handholding Requested"}`,
-        }),
-        saveLead({
-          name: form.name.trim(),
-          phone: cleanPhone,
-          email: form.email.trim(),
-          city: form.city.trim(),
-          brand: "Staff Training & Support",
-          budget: "₹1.5 Lakh (+ Trainer Expenses)",
-        }),
-      ]);
+      await saveTraining({
+        name: form.name.trim(),
+        phone: cleanPhone,
+        email: form.email.trim(),
+        city: form.city.trim(),
+        startDate: form.startDate || "Immediate",
+        notes: form.notes || "6-Month On-site Kitchen Handholding Requested",
+        brand: "Staff Training & Support",
+        budget: "₹1.5 Lakh (+ Trainer Expenses)",
+        status: "New",
+      });
 
       setSubmitted(true);
     } catch (err: any) {

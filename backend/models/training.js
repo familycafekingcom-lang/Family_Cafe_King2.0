@@ -2,9 +2,62 @@ const mongoose = require("mongoose");
 
 const trainingSchema = new mongoose.Schema(
   {
+    name: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
+    phone: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
+    email: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
+    city: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
+    startDate: {
+      type: String,
+      trim: true,
+      default: "Immediate",
+    },
+
+    notes: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
+    brand: {
+      type: String,
+      trim: true,
+      default: "Staff Training & Support",
+    },
+
+    budget: {
+      type: String,
+      trim: true,
+      default: "₹1.5 Lakh (+ Trainer Expenses)",
+    },
+
+    status: {
+      type: String,
+      enum: ["New", "Contacted", "Confirmed", "Completed", "Cancelled"],
+      default: "New",
+    },
+
     heading: {
       type: String,
-      required: true,
       default: "Staff Training & Support",
       trim: true,
     },
@@ -54,3 +107,4 @@ const trainingSchema = new mongoose.Schema(
 
 module.exports =
   mongoose.models.Training || mongoose.model("Training", trainingSchema);
+

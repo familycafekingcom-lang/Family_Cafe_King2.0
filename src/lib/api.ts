@@ -452,14 +452,23 @@ export async function apiDeleteContact(id: string, token?: string): Promise<void
 export interface MernTraining {
   _id?: string;
   id?: string;
-  heading: string;
-  sub_heading: string;
-  food_categories: string[];
-  time_period: string;
-  base_cost: string;
-  extra_costs: string[];
-  is_active: boolean;
-  order: number;
+  name?: string;
+  phone?: string;
+  email?: string;
+  city?: string;
+  startDate?: string;
+  notes?: string;
+  brand?: string;
+  budget?: string;
+  status?: string;
+  heading?: string;
+  sub_heading?: string;
+  food_categories?: string[];
+  time_period?: string;
+  base_cost?: string;
+  extra_costs?: string[];
+  is_active?: boolean;
+  order?: number;
   createdAt?: string;
   created_at?: string;
 }

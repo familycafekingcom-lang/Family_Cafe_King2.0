@@ -1140,19 +1140,38 @@ export function allRequestsToCsv(
 // ================= TRAINING PACKAGES =================
 
 export interface TrainingInput {
-  heading: string;
-  sub_heading: string;
-  food_categories: string[];
-  time_period: string;
-  base_cost: string;
-  extra_costs: string[];
-  is_active: boolean;
-  order: number;
+  name?: string;
+  phone?: string;
+  email?: string;
+  city?: string;
+  startDate?: string;
+  notes?: string;
+  brand?: string;
+  budget?: string;
+  status?: string;
+
+  heading?: string;
+  sub_heading?: string;
+  food_categories?: string[];
+  time_period?: string;
+  base_cost?: string;
+  extra_costs?: string[];
+  is_active?: boolean;
+  order?: number;
 }
 
 export interface TrainingRecord extends TrainingInput {
   id: string;
   created_at: string;
+  name: string;
+  phone: string;
+  email: string;
+  city: string;
+  startDate: string;
+  notes: string;
+  brand: string;
+  budget: string;
+  status: string;
 }
 
 const TRAINING_KEY = "fck_training_v1";
@@ -1161,6 +1180,15 @@ export const DEFAULT_TRAINING: TrainingRecord[] = [
   {
     id: "default-training-1",
     created_at: new Date().toISOString(),
+    name: "Sample Trainee",
+    phone: "9876543210",
+    email: "trainee@example.com",
+    city: "New Delhi",
+    startDate: "Immediate",
+    notes: "6-Month On-site Kitchen Handholding",
+    brand: "Staff Training & Support",
+    budget: "₹1.5 Lakh (+ Trainer Expenses)",
+    status: "New",
     heading: "Staff Training & Support",
     sub_heading: "Food Training Support (Pan India)",
     food_categories: ["Only Veg & Indian", "Fast Food", "Mocktails"],
@@ -1177,6 +1205,15 @@ const normalizeTraining = (value: unknown): TrainingRecord => {
   return {
     id: String(item.id || item._id || makeId("training")),
     created_at: String(item.created_at || item.createdAt || new Date().toISOString()),
+    name: String(item.name || ""),
+    phone: String(item.phone || ""),
+    email: String(item.email || ""),
+    city: String(item.city || ""),
+    startDate: String(item.startDate || "Immediate"),
+    notes: String(item.notes || ""),
+    brand: String(item.brand || "Staff Training & Support"),
+    budget: String(item.budget || "₹1.5 Lakh (+ Trainer Expenses)"),
+    status: String(item.status || "New"),
     heading: String(item.heading || "Staff Training & Support"),
     sub_heading: String(item.sub_heading || "Food Training Support (Pan India)"),
     food_categories: Array.isArray(item.food_categories) ? item.food_categories : ["Only Veg & Indian", "Fast Food", "Mocktails"],
