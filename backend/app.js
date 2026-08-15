@@ -51,7 +51,7 @@ app.use("/api/slides", sliderroutes);
 app.use("/api/training", trainingroutes);
 
 // Serve index.html for non-API client routes
-app.get("*", (req, res, next) => {
+app.get("(.*)", (req, res, next) => {
   if (req.path.startsWith("/api")) return next();
   res.sendFile(path.join(distPath, "index.html"), (err) => {
     if (err) {
