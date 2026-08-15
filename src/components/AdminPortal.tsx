@@ -888,9 +888,9 @@ export function AdminPortal() {
               </div>
               <button
                 onClick={downloadCsv}
-                className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-extrabold text-white hover:bg-emerald-500"
+                className="inline-flex items-center gap-2 rounded-full bg-emerald-600 hover:bg-emerald-500 px-4.5 py-2 text-xs font-extrabold text-white shadow-md shadow-emerald-950/20 transition-all cursor-pointer"
               >
-                <Download size={14} /> Export CSV
+                <Download size={15} /> Export CSV
               </button>
             </div>
 
@@ -1040,9 +1040,9 @@ export function AdminPortal() {
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => downloadCsvFile(`staff-training-bookings-${new Date().toISOString().slice(0, 10)}.csv`, trainingsToCsv(trainings))}
-                  className="inline-flex items-center gap-2 rounded-xl border border-amber-500/40 bg-amber-500/10 px-3.5 py-1.5 text-xs font-bold text-amber-500 hover:bg-amber-500/20 transition-all cursor-pointer"
+                  className="inline-flex items-center gap-2 rounded-full bg-emerald-600 hover:bg-emerald-500 px-4.5 py-2 text-xs font-extrabold text-white shadow-md shadow-emerald-950/20 transition-all cursor-pointer"
                 >
-                  <Download size={14} /> Download CSV
+                  <Download size={15} /> Export CSV
                 </button>
                 <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-xs font-extrabold text-amber-500">
                   {trainings.length} Total Training Bookings
@@ -1443,9 +1443,9 @@ export function AdminPortal() {
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => downloadCsvFile(`city-bookings-${new Date().toISOString().slice(0, 10)}.csv`, bookingsToCsv(bookings))}
-                  className="inline-flex items-center gap-2 rounded-xl border border-amber-500/40 bg-amber-500/10 px-3.5 py-1.5 text-xs font-bold text-amber-500 hover:bg-amber-500/20 transition-all cursor-pointer"
+                  className="inline-flex items-center gap-2 rounded-full bg-emerald-600 hover:bg-emerald-500 px-4.5 py-2 text-xs font-extrabold text-white shadow-md shadow-emerald-950/20 transition-all cursor-pointer"
                 >
-                  <Download size={14} /> Download CSV
+                  <Download size={15} /> Export CSV
                 </button>
                 <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-xs font-extrabold text-amber-500">
                   {bookings.length} Total City Bookings
@@ -1515,9 +1515,9 @@ export function AdminPortal() {
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => downloadCsvFile(`contact-inquiries-${new Date().toISOString().slice(0, 10)}.csv`, contactsToCsv(contacts))}
-                  className="inline-flex items-center gap-2 rounded-xl border border-amber-500/40 bg-amber-500/10 px-3.5 py-1.5 text-xs font-bold text-amber-500 hover:bg-amber-500/20 transition-all cursor-pointer"
+                  className="inline-flex items-center gap-2 rounded-full bg-emerald-600 hover:bg-emerald-500 px-4.5 py-2 text-xs font-extrabold text-white shadow-md shadow-emerald-950/20 transition-all cursor-pointer"
                 >
-                  <Download size={14} /> Download CSV
+                  <Download size={15} /> Export CSV
                 </button>
                 <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-xs font-extrabold text-amber-500">
                   {contacts.length} Total Inquiries
