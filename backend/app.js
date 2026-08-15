@@ -50,9 +50,16 @@ app.use("/api/launches", launchroutes);
 app.use("/api/slides", sliderroutes);
 app.use("/api/training", trainingroutes);
 
-// Serve index.html for non-API client routes
-app.get("(.*)", (req, res, next) => {
-  if (req.path.startsWith("/api")) return next();
+// 404 handler for unmatched API routes
+app.use("/api", (req, res) => {
+  res.status(404).json({
+    success: false,
+    message: "API Route Not Found",
+  });
+});
+
+// Serve index.html for non-API client routes (Express 5 safe fallback)
+app.use((req, res) => {
   res.sendFile(path.join(distPath, "index.html"), (err) => {
     if (err) {
       res.json({
@@ -60,14 +67,6 @@ app.get("(.*)", (req, res, next) => {
         message: "Family Cafe King Backend Running 🚀",
       });
     }
-  });
-});
-
-// 404 handler for API routes
-app.use((req, res) => {
-  res.status(404).json({
-    success: false,
-    message: "Route Not Found",
   });
 });
 
