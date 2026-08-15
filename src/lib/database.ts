@@ -1137,6 +1137,68 @@ export function allRequestsToCsv(
   return [header, ...allCombined].map((row) => row.map(escape).join(",")).join("\n");
 }
 
+export function downloadCsvFile(filename: string, csvContent: string): void {
+  if (typeof window === "undefined") return;
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+export function trainingsToCsv(trainings: TrainingRecord[] = []): string {
+  const escape = (val: string) => `"${(val || "").replace(/"/g, '""')}"`;
+  const header = ["Submitted Date", "Name", "Phone", "Email", "City", "Program", "Budget/Charge", "Start Date", "Status", "Notes"];
+  const rows = trainings.map((t) => [
+    new Date(t.created_at || Date.now()).toLocaleString("en-IN"),
+    t.name || t.heading || "",
+    t.phone || "",
+    t.email || "",
+    t.city || "",
+    t.brand || t.heading || "Staff Training & Support",
+    t.budget || "",
+    t.startDate || "Immediate",
+    t.status || "New",
+    t.notes || "",
+  ]);
+  return [header, ...rows].map((row) => row.map(escape).join(",")).join("\n");
+}
+
+export function contactsToCsv(contacts: any[] = []): string {
+  const escape = (val: string) => `"${(val || "").replace(/"/g, '""')}"`;
+  const header = ["Submitted Date", "Name", "Phone", "Email", "Subject", "Message"];
+  const rows = contacts.map((c) => [
+    new Date(c.createdAt || c.created_at || Date.now()).toLocaleString("en-IN"),
+    c.name || "",
+    c.phone || "",
+    c.email || "",
+    c.subject || "",
+    c.message || "",
+  ]);
+  return [header, ...rows].map((row) => row.map(escape).join(",")).join("\n");
+}
+
+export function bookingsToCsv(bookings: any[] = []): string {
+  const escape = (val: string) => `"${(val || "").replace(/"/g, '""')}"`;
+  const header = ["Submitted Date", "Name", "Phone", "Email", "City", "Brand", "Budget", "Status", "Notes"];
+  const rows = bookings.map((b) => [
+    new Date(b.createdAt || b.created_at || Date.now()).toLocaleString("en-IN"),
+    b.customerName || b.name || "City Booking Applicant",
+    b.phone || "",
+    b.email || "",
+    b.city || "",
+    b.brand || "Family Cafe King",
+    b.budget || "",
+    b.status || "New",
+    b.notes || b.specialRequest || "",
+  ]);
+  return [header, ...rows].map((row) => row.map(escape).join(",")).join("\n");
+}
+
 // ================= TRAINING PACKAGES =================
 
 export interface TrainingInput {

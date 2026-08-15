@@ -33,7 +33,9 @@ import {
 } from "lucide-react";
 import {
   allRequestsToCsv,
+  bookingsToCsv,
   clearAllDemoLeads,
+  contactsToCsv,
   DEFAULT_SLIDES,
   DEFAULT_UPCOMING,
   deleteBookingRecord,
@@ -41,6 +43,7 @@ import {
   deleteLead,
   deleteSlide,
   deleteTrainingRecord,
+  downloadCsvFile,
   getVisitorStats,
   listBookings,
   listContacts,
@@ -53,6 +56,7 @@ import {
   saveSlide,
   seedDefaultSlides,
   signInAdmin,
+  trainingsToCsv,
   updateLaunch,
   updateLead,
   updateSlide,
@@ -1033,9 +1037,17 @@ export function AdminPortal() {
                   Direct training bookings submitted via the Staff Training modal.
                 </p>
               </div>
-              <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-xs font-extrabold text-amber-500">
-                {trainings.length} Total Training Bookings
-              </span>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => downloadCsvFile(`staff-training-bookings-${new Date().toISOString().slice(0, 10)}.csv`, trainingsToCsv(trainings))}
+                  className="inline-flex items-center gap-2 rounded-xl border border-amber-500/40 bg-amber-500/10 px-3.5 py-1.5 text-xs font-bold text-amber-500 hover:bg-amber-500/20 transition-all cursor-pointer"
+                >
+                  <Download size={14} /> Download CSV
+                </button>
+                <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-xs font-extrabold text-amber-500">
+                  {trainings.length} Total Training Bookings
+                </span>
+              </div>
             </div>
 
             <div className="space-y-4">
@@ -1418,19 +1430,27 @@ export function AdminPortal() {
           </div>
         )}
 
-        {/* BOOKINGS TAB */}
+        {/* CITY BOOKINGS TAB */}
         {activeTab === "bookings" && (
           <div className={`rounded-3xl border p-6 backdrop-blur-xl ${
             isNight ? "border-slate-800 bg-slate-900/60" : "border-amber-200/80 bg-white/90 shadow-xl shadow-amber-950/5"
           }`}>
             <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
               <div>
-                <h2 className={`font-display text-xl font-black ${isNight ? "text-white" : "text-slate-900"}`}>City Territory &amp; Staff Training Bookings</h2>
-                <p className={`text-xs font-medium ${isNight ? "text-slate-400" : "text-amber-900/70"}`}>Franchise city territory reservations, Staff Training &amp; Operational Support bookings received from customers.</p>
+                <h2 className={`font-display text-xl font-black ${isNight ? "text-white" : "text-slate-900"}`}>City Bookings & Slot Reservations</h2>
+                <p className={`text-xs font-medium ${isNight ? "text-slate-400" : "text-amber-900/70"}`}>Franchise city slot bookings and city reservation applications received from customers.</p>
               </div>
-              <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-xs font-extrabold text-amber-500">
-                {bookings.length} Total Bookings
-              </span>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => downloadCsvFile(`city-bookings-${new Date().toISOString().slice(0, 10)}.csv`, bookingsToCsv(bookings))}
+                  className="inline-flex items-center gap-2 rounded-xl border border-amber-500/40 bg-amber-500/10 px-3.5 py-1.5 text-xs font-bold text-amber-500 hover:bg-amber-500/20 transition-all cursor-pointer"
+                >
+                  <Download size={14} /> Download CSV
+                </button>
+                <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-xs font-extrabold text-amber-500">
+                  {bookings.length} Total City Bookings
+                </span>
+              </div>
             </div>
 
             <div className="space-y-3">
@@ -1439,7 +1459,7 @@ export function AdminPortal() {
                   isNight ? "border-slate-800 bg-slate-950" : "border-amber-200 bg-amber-50/40"
                 }`}>
                   <Calendar size={28} className="mx-auto text-amber-500 mb-2" />
-                  <p className={`text-sm font-bold ${isNight ? "text-slate-400" : "text-amber-900/70"}`}>No bookings submitted yet.</p>
+                  <p className={`text-sm font-bold ${isNight ? "text-slate-400" : "text-amber-900/70"}`}>No city bookings submitted yet.</p>
                 </div>
               )}
 
@@ -1449,7 +1469,7 @@ export function AdminPortal() {
                 }`}>
                   <div className="space-y-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <h3 className={`font-bold text-base capitalize ${isNight ? "text-white" : "text-slate-900"}`}>{b.name || "Territory Applicant"}</h3>
+                      <h3 className={`font-bold text-base capitalize ${isNight ? "text-white" : "text-slate-900"}`}>{b.name || "City Booking Applicant"}</h3>
                       <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-0.5 text-xs font-bold text-amber-500">
                         📞 {b.phone}
                       </span>
@@ -1467,7 +1487,7 @@ export function AdminPortal() {
                     <p className={`mt-2 text-xs italic p-2.5 rounded-xl border ${
                       isNight ? "bg-slate-900 border-slate-800 text-amber-300" : "bg-amber-50 border-amber-200 text-amber-950 font-medium"
                     }`}>
-                      "{b.notes || `City Territory Booking Request for ${(b as any).city || "City"}`}"
+                      "{b.notes || `City Booking Request for ${(b as any).city || "City"}`}"
                     </p>
                   </div>
                   <button
@@ -1487,8 +1507,23 @@ export function AdminPortal() {
           <div className={`rounded-3xl border p-6 backdrop-blur-xl ${
             isNight ? "border-slate-800 bg-slate-900/60" : "border-amber-200/80 bg-white/90 shadow-xl shadow-amber-950/5"
           }`}>
-            <h2 className={`font-display text-xl font-black ${isNight ? "text-white" : "text-slate-900"}`}>Direct Contact Inquiries</h2>
-            <p className={`text-xs font-medium mb-6 ${isNight ? "text-slate-400" : "text-amber-900/70"}`}>Messages submitted through the contact form on customer site.</p>
+            <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+              <div>
+                <h2 className={`font-display text-xl font-black ${isNight ? "text-white" : "text-slate-900"}`}>Direct Contact Inquiries</h2>
+                <p className={`text-xs font-medium ${isNight ? "text-slate-400" : "text-amber-900/70"}`}>Messages submitted through the contact form on customer site.</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => downloadCsvFile(`contact-inquiries-${new Date().toISOString().slice(0, 10)}.csv`, contactsToCsv(contacts))}
+                  className="inline-flex items-center gap-2 rounded-xl border border-amber-500/40 bg-amber-500/10 px-3.5 py-1.5 text-xs font-bold text-amber-500 hover:bg-amber-500/20 transition-all cursor-pointer"
+                >
+                  <Download size={14} /> Download CSV
+                </button>
+                <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-xs font-extrabold text-amber-500">
+                  {contacts.length} Total Inquiries
+                </span>
+              </div>
+            </div>
 
             <div className="space-y-3">
               {contacts.length === 0 && (

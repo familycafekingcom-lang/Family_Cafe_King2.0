@@ -75,25 +75,15 @@ export function CityBookingModal({ isOpen, initialCity = "", initialBrand = "", 
     setSaving(true);
 
     try {
-      await Promise.all([
-        saveBooking({
-          name: form.name.trim(),
-          phone: cleanPhone,
-          email: form.email.trim(),
-          city: form.city.trim(),
-          brand: form.brand,
-          budget: form.budget,
-          notes: form.notes ? `City Territory Booking for ${form.city}: ${form.notes}` : `City Territory Booking Request for ${form.city}`,
-        }),
-        saveLead({
-          name: form.name.trim(),
-          phone: cleanPhone,
-          email: form.email.trim(),
-          city: form.city.trim() || "City Booking",
-          brand: form.brand,
-          budget: form.budget,
-        }),
-      ]);
+      await saveBooking({
+        name: form.name.trim(),
+        phone: cleanPhone,
+        email: form.email.trim(),
+        city: form.city.trim(),
+        brand: form.brand,
+        budget: form.budget,
+        notes: form.notes ? `City Booking for ${form.city}: ${form.notes}` : `City Booking Request for ${form.city}`,
+      });
 
       setSubmitted(true);
     } catch (err: any) {
@@ -140,7 +130,7 @@ export function CityBookingModal({ isOpen, initialCity = "", initialBrand = "", 
             </span>
             <div>
               <span className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-amber-300">
-                Exclusive Territory Protection
+                Exclusive City Franchise Rights
               </span>
               <h3 className="font-display text-lg font-bold text-white sm:text-xl">
                 Book Your City Franchise
@@ -167,7 +157,7 @@ export function CityBookingModal({ isOpen, initialCity = "", initialBrand = "", 
                 City Booking Reserved!
               </h3>
               <p className="mt-2 max-w-md text-[15px] font-semibold text-slate-800 leading-relaxed">
-                Thank you! Territory booking request has been received.
+                Thank you! City booking request has been received.
               </p>
               <div className="mt-7 flex flex-wrap justify-center gap-3">
                 <button
