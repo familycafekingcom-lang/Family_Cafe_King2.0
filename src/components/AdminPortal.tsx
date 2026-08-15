@@ -715,7 +715,7 @@ export function AdminPortal() {
               { id: "training", label: `Staff Training (${stats.trainingsCount})`, icon: <Award size={15} /> },
               { id: "slides", label: `Hero Slider (${stats.slidesCount})`, icon: <Sliders size={15} /> },
               { id: "launches", label: `Upcoming Launches (${stats.launchesCount})`, icon: <MapPin size={15} /> },
-              { id: "bookings", label: `Territory Bookings (${stats.bookingsCount})`, icon: <Calendar size={15} /> },
+              { id: "bookings", label: `City Bookings (${stats.bookingsCount})`, icon: <Calendar size={15} /> },
               { id: "contacts", label: `Inquiries (${stats.contactsCount})`, icon: <Inbox size={15} /> },
             ].map((tab) => (
               <button
