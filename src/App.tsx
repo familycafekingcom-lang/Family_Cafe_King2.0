@@ -1539,7 +1539,7 @@ function LeadCTA({ initialBrand }: { initialBrand?: string }) {
           </Reveal>
           <Reveal delay={140}>
             <p className="mt-5 max-w-lg text-[17px] font-semibold leading-relaxed text-maroon-900">
-              Submit your enquiry below to receive an official franchise prospectus, itemized Starter Kit, and local city territory check within 24 hours.
+              Submit your enquiry below to receive an official franchise prospectus, itemized Starter Kit, and local city availability check within 24 hours.
             </p>
           </Reveal>
 
@@ -1548,7 +1548,7 @@ function LeadCTA({ initialBrand }: { initialBrand?: string }) {
               {[
                 "Direct contact with central franchise onboarding team",
                 "Full Starter Kit details & itemized recipe list provided",
-                "City-wise exclusive territory protection",
+                "City-wise exclusive franchise protection",
                 "No hidden royalties or unexpected operational charges",
               ].map((t) => (
                 <li key={t} className="flex items-start gap-3.5 text-[15.5px] font-bold text-maroon-950">
@@ -1560,7 +1560,6 @@ function LeadCTA({ initialBrand }: { initialBrand?: string }) {
               ))}
             </ul>
           </Reveal>
-
           <Reveal delay={280}>
             <div className="mt-8 flex flex-wrap items-center gap-3">
               <a

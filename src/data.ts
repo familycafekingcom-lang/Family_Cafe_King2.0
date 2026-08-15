@@ -657,7 +657,7 @@ export const PLANS: Plan[] = [
       "Comprehensive staff & manager training at HQ + on-site",
       "Regional PR & local launch marketing push",
       "Shared kitchen efficiency & maximum daily profitability",
-      "Priority city territory reservation & protection",
+      "Priority city reservation & protection",
     ],
     cta: "Go Multi-Brand",
   },

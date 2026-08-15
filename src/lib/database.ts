@@ -845,8 +845,8 @@ export async function saveBooking(input: BookingInput): Promise<{ record: Bookin
         bookingTime: input.time || "12:00 PM",
         guests: input.guests || 1,
         totalPersons: input.guests || 1,
-        notes: input.notes || `City Territory Booking Request for ${input.city || "City"}`,
-        specialRequest: input.notes || `City Territory Booking Request for ${input.city || "City"}`,
+        notes: input.notes || `City Booking Request for ${input.city || "City"}`,
+        specialRequest: input.notes || `City Booking Request for ${input.city || "City"}`,
       });
       const record: BookingRecord = {
         ...input,
@@ -882,7 +882,7 @@ export async function listBookings(accessToken?: string): Promise<BookingRecord[
       const rows = await apiGetBookings(accessToken);
       mernRows = rows.map((b) => ({
         id: b._id || b.id || makeId("booking"),
-        name: b.customerName || b.name || "Territory Applicant",
+        name: b.customerName || b.name || "City Booking Applicant",
         phone: b.phone || "",
         email: b.email || "",
         city: (b as any).city || "",
@@ -917,7 +917,7 @@ export async function listBookings(accessToken?: string): Promise<BookingRecord[
     map.set(item.id, {
       ...item,
       // If MERN didn't return these fields (old backend), use local data
-      name: item.name || local?.name || "Territory Applicant",
+      name: item.name || local?.name || "City Booking Applicant",
       city: item.city || local?.city || "",
       budget: item.budget || local?.budget || "",
       brand: item.brand || local?.brand || "Family Cafe King",
