@@ -2,10 +2,10 @@ import { useEffect, useState } from "react";
 import { Crown } from "lucide-react";
 
 interface InitialLoaderProps {
-  text?: string;
+  onComplete?: () => void;
 }
 
-export function InitialLoader() {
+export function InitialLoader({ onComplete }: InitialLoaderProps) {
   const [progress, setProgress] = useState(1);
 
   useEffect(() => {
@@ -13,15 +13,18 @@ export function InitialLoader() {
       setProgress((prev) => {
         if (prev >= 100) {
           clearInterval(interval);
+          if (onComplete) {
+            setTimeout(onComplete, 60);
+          }
           return 100;
         }
-        // Smooth fast counting step (approx 600ms total, clearly visible numbers 1-100)
-        return prev + 3;
+        // Smooth counting 1 to 100 (~600ms)
+        return prev + 2;
       });
-    }, 16);
+    }, 12);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [onComplete]);
 
   return (
     <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#1D0609] text-white animate-fadeIn selection:bg-amber-400">

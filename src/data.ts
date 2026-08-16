@@ -25,7 +25,7 @@ export const LOCATION = "SA 7/140 PS, Benipur Shivpur, Sarnath, Varanasi, 221007
 export const SOCIAL_LINKS = {
   instagram: "https://www.instagram.com/familycafeking",
   facebook: "https://www.facebook.com/profile.php?id=61591703498565",
-  linkedin: "https://www.linkedin.com/company/133456642dashboard/",
+  linkedin: "https://www.linkedin.com/company/133456642/",
   whatsapp: "https://wa.me/+919341127991",
 };
 

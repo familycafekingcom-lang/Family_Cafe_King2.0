@@ -21,6 +21,7 @@ import {
   Coffee,
   PhoneCall,
   Eye,
+  BookOpen,
 } from "lucide-react";
 import { Reveal } from "./components/Reveal";
 import { BrandModal } from "./components/BrandModal";
@@ -77,7 +78,13 @@ const WhatsApp = ({ size = 16 }: { size?: number }) => (
 );
 
 /* ---------- NAV ---------- */
-function Nav() {
+function Nav({
+  onOpenBrand,
+  onTriggerNavLoader,
+}: {
+  onOpenBrand?: (brand: BrandData) => void;
+  onTriggerNavLoader?: (href: string, label: string) => void;
+}) {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
 
@@ -102,6 +109,23 @@ function Nav() {
     { href: "#faq", label: "FAQ" },
   ];
 
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string, label: string) => {
+    e.preventDefault();
+    setOpen(false);
+    if (onTriggerNavLoader) {
+      onTriggerNavLoader(href, label);
+    } else {
+      const targetId = href.replace("#", "");
+      const elem = document.getElementById(targetId);
+      if (elem) {
+        elem.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+      if (label === "Menu" && onOpenBrand) {
+        onOpenBrand(BRANDS[0]);
+      }
+    }
+  };
+
   return (
     <header
       className={`fixed inset-x-0 top-0 z-50 transition-all duration-500 ${scrolled
@@ -111,7 +135,7 @@ function Nav() {
     >
       <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-3 sm:px-8 sm:py-4">
         {/* Logo */}
-        <a href="#top" className="flex items-center gap-2.5 group">
+        <a href="#top" onClick={(e) => handleNavClick(e, "#top", "Logo")} className="flex items-center gap-2.5 group">
           <span className="relative grid h-11 w-11 flex-shrink-0 place-items-center overflow-hidden rounded-xl border border-maroon-900/15 bg-white p-1 shadow-md transition-transform group-hover:scale-105">
             <img
               src={
@@ -135,6 +159,7 @@ function Nav() {
             <a
               key={l.href}
               href={l.href}
+              onClick={(e) => handleNavClick(e, l.href, l.label)}
               className="rounded-full px-3.5 py-2 text-[14px] font-bold text-maroon-950 transition hover:bg-maroon-900/10 hover:text-maroon-900"
             >
               {l.label}
@@ -152,6 +177,7 @@ function Nav() {
           </a>
           <a
             href="#lead"
+            onClick={(e) => handleNavClick(e, "#lead", "Franchise")}
             className="group relative overflow-hidden rounded-full bg-gradient-to-br from-amber-500 via-orange-600 to-rose-700 px-5 py-2.5 text-[13.5px] font-bold text-white shadow-lg shadow-orange-500/30 transition hover:shadow-orange-500/50"
           >
             <span className="relative z-10 inline-flex items-center gap-1.5">
@@ -184,7 +210,7 @@ function Nav() {
               <a
                 key={l.href}
                 href={l.href}
-                onClick={() => setOpen(false)}
+                onClick={(e) => handleNavClick(e, l.href, l.label)}
                 className="flex items-center justify-between rounded-xl px-4 py-3 text-[15px] font-bold text-maroon-950 hover:bg-maroon-900/10"
               >
                 {l.label}
@@ -193,7 +219,7 @@ function Nav() {
             ))}
             <a
               href="#lead"
-              onClick={() => setOpen(false)}
+              onClick={(e) => handleNavClick(e, "#lead", "Franchise")}
               className="mt-2 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-amber-500 via-orange-600 to-rose-700 px-4 py-3.5 text-sm font-bold text-white shadow-lg shadow-orange-500/30"
             >
               Get Franchise <ArrowRight size={16} />
@@ -263,7 +289,7 @@ function Hero({ onOpenBrand }: { onOpenBrand: (brand: BrandData) => void }) {
   return (
     <section
       id="top"
-      className="relative overflow-hidden pt-20 pb-10 sm:pt-28 sm:pb-16 lg:pt-40 lg:pb-28"
+      className="relative overflow-hidden pt-16 pb-8 sm:pt-24 sm:pb-12 lg:pt-28 lg:pb-14"
     >
       {/* Ambient background */}
       <div className="radial-warm absolute inset-0 -z-10" />
@@ -677,7 +703,7 @@ function Brands({ onOpenBrand }: { onOpenBrand: (brand: BrandData) => void }) {
   const brandList = BRANDS.filter((b) => b.key !== "fck");
 
   return (
-    <section id="brands" className="relative py-20 sm:py-28">
+    <section id="brands" className="relative py-10 sm:py-14 scroll-mt-24">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <div className="mb-14 text-center">
           <Reveal>
@@ -702,7 +728,10 @@ function Brands({ onOpenBrand }: { onOpenBrand: (brand: BrandData) => void }) {
           {brandList.map((b, k) => {
             return (
               <Reveal key={b.key} delay={k * 80} variant="up" className="h-full">
-                <article className="lift group relative flex h-full flex-col overflow-hidden rounded-3xl border border-maroon-900/15 bg-white p-6 shadow-sm">
+                <article
+                  onClick={() => onOpenBrand(b)}
+                  className="lift group relative flex h-full cursor-pointer flex-col overflow-hidden rounded-3xl border border-maroon-900/15 bg-white p-6 shadow-sm transition hover:border-orange-500/50"
+                >
                   <div
                     className={`absolute inset-x-0 top-0 h-2 bg-gradient-to-r ${b.accentGradient}`}
                     aria-hidden
@@ -769,7 +798,7 @@ function Features() {
   return (
     <section
       id="features"
-      className="relative overflow-hidden bg-gradient-to-b from-cream-50 via-cream-100/80 to-cream-50 py-20 sm:py-28"
+      className="relative overflow-hidden bg-gradient-to-b from-cream-50 via-cream-100/80 to-cream-50 py-10 sm:py-14 scroll-mt-24"
     >
       <div className="pointer-events-none absolute -left-40 top-20 h-96 w-96 rounded-full bg-gradient-to-br from-amber-300/30 to-orange-500/20 blur-3xl" />
       <div className="pointer-events-none absolute -right-32 bottom-10 h-80 w-80 rounded-full bg-gradient-to-br from-rose-400/25 to-maroon-700/20 blur-3xl" />
@@ -840,7 +869,7 @@ function Showcase({ onOpenBrand }: { onOpenBrand: (brand: BrandData) => void }) 
   ];
 
   return (
-    <section id="showcase" className="relative py-20 sm:py-28">
+    <section id="showcase" className="relative py-10 sm:py-14 scroll-mt-24">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <div className="mb-12 text-center">
           <Reveal>
@@ -857,6 +886,14 @@ function Showcase({ onOpenBrand }: { onOpenBrand: (brand: BrandData) => void }) 
             <p className="mx-auto mt-3 max-w-2xl text-[16.5px] font-medium leading-relaxed text-maroon-950">
               Standardized recipes and high margins. Click on any item or brand to explore the full itemized menu inside the Brand Deck.
             </p>
+            <div className="mt-5 flex justify-center">
+              <button
+                onClick={() => onOpenBrand(BRANDS[0])}
+                className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-amber-500 via-orange-600 to-rose-700 px-6 py-2.5 text-sm font-bold text-white shadow-lg shadow-orange-500/25 transition hover:scale-105 hover:shadow-orange-500/40"
+              >
+                <BookOpen size={16} /> Open Complete Menu Deck
+              </button>
+            </div>
           </Reveal>
         </div>
 
@@ -903,7 +940,7 @@ function Showcase({ onOpenBrand }: { onOpenBrand: (brand: BrandData) => void }) 
 /* ---------- BENEFITS (LONG TERM PROFITS) ---------- */
 function Benefits() {
   return (
-    <section className="relative overflow-hidden bg-[#FAEBD6] py-20 sm:py-28 text-maroon-950">
+    <section className="relative overflow-hidden bg-[#FAEBD6] py-10 sm:py-14 text-maroon-950">
       <div className="pointer-events-none absolute inset-0 -z-10 opacity-40 bg-grain" />
       <div className="pointer-events-none absolute -top-24 left-1/4 -z-10 h-96 w-96 rounded-full bg-amber-500/20 blur-3xl animate-blob" />
       <div className="pointer-events-none absolute -bottom-32 right-1/4 -z-10 h-96 w-96 rounded-full bg-rose-500/15 blur-3xl animate-blob" style={{ animationDelay: "4s" }} />
@@ -989,7 +1026,7 @@ function StaffTraining({
   onOpenBooking: () => void;
 }) {
   return (
-    <section id="training" className="relative overflow-hidden bg-gradient-to-b from-cream-50 via-amber-50/50 to-cream-50 py-20 sm:py-28">
+    <section id="training" className="relative overflow-hidden bg-gradient-to-b from-cream-50 via-amber-50/50 to-cream-50 py-10 sm:py-14">
       <div className="pointer-events-none absolute inset-0 -z-10 opacity-30 bg-grain" />
       <div className="pointer-events-none absolute top-1/3 right-10 -z-10 h-72 w-72 rounded-full bg-amber-400/20 blur-3xl" />
 
@@ -1152,7 +1189,7 @@ function StaffTraining({
 /* ---------- TESTIMONIALS ---------- */
 function Testimonials() {
   return (
-    <section id="testimonials" className="relative py-20 sm:py-28">
+    <section id="testimonials" className="relative py-10 sm:py-14 scroll-mt-24">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <div className="mb-14 flex flex-col items-end justify-between gap-6 md:flex-row">
           <div>
@@ -1347,7 +1384,7 @@ function PricingCard({ plan: p }: { plan: (typeof PLANS)[number] }) {
 
 function Pricing() {
   return (
-    <section id="pricing" className="relative overflow-hidden py-20 sm:py-28">
+    <section id="pricing" className="relative overflow-hidden py-10 sm:py-14 scroll-mt-24">
       <div className="absolute inset-0 -z-10 bg-gradient-to-b from-cream-50 via-cream-100/80 to-cream-50" />
       <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-72 bg-gradient-to-b from-amber-500/10 to-transparent" />
 
@@ -1386,7 +1423,7 @@ function Pricing() {
 function FAQ() {
   const [openIdx, setOpenIdx] = useState<number | null>(0);
   return (
-    <section id="faq" className="relative py-20 sm:py-28">
+    <section id="faq" className="relative py-10 sm:py-14 scroll-mt-24">
       <div className="mx-auto max-w-4xl px-5 sm:px-8">
         <div className="mb-12 text-center">
           <Reveal>
@@ -1520,7 +1557,7 @@ function LeadCTA({ initialBrand }: { initialBrand?: string }) {
   };
 
   return (
-    <section id="lead" className="relative overflow-hidden bg-[#FAEBD6] py-20 sm:py-28 text-maroon-950">
+    <section id="lead" className="relative overflow-hidden bg-[#FAEBD6] py-10 sm:py-14 text-maroon-950 scroll-mt-24">
       <div className="pointer-events-none absolute inset-0 -z-10 opacity-40 bg-grain" />
       <div className="pointer-events-none absolute -left-32 top-20 -z-10 h-96 w-96 rounded-full bg-amber-500/20 blur-3xl animate-blob" />
       <div className="pointer-events-none absolute -right-24 bottom-0 -z-10 h-[28rem] w-[28rem] rounded-full bg-rose-500/15 blur-3xl animate-blob" style={{ animationDelay: "4s" }} />
@@ -1981,22 +2018,50 @@ export default function App() {
 
   const [isAdminRoute, setIsAdminRoute] = useState(checkPortalRoute);
   const [appLoading, setAppLoading] = useState(true);
+  const [pendingNavTarget, setPendingNavTarget] = useState<{ href: string; label: string } | null>(null);
 
   useEffect(() => {
     trackVisitor();
-    const timer = setTimeout(() => setAppLoading(false), 600);
-    return () => clearTimeout(timer);
   }, []);
 
   useEffect(() => {
     const onHashChange = () => {
-      setAppLoading(true);
-      setIsAdminRoute(checkPortalRoute());
-      setTimeout(() => setAppLoading(false), 500);
+      const isPortal = checkPortalRoute();
+      setIsAdminRoute(isPortal);
     };
     window.addEventListener("hashchange", onHashChange);
     return () => window.removeEventListener("hashchange", onHashChange);
   }, []);
+
+  const handleTriggerNavLoader = (href: string, label: string) => {
+    setPendingNavTarget({ href, label });
+    setAppLoading(true);
+  };
+
+  const handleLoaderComplete = () => {
+    setAppLoading(false);
+    if (pendingNavTarget) {
+      const targetId = pendingNavTarget.href.replace("#", "");
+      const elem = document.getElementById(targetId);
+      if (elem) {
+        setTimeout(() => {
+          elem.scrollIntoView({ behavior: "smooth", block: "start" });
+        }, 40);
+      }
+      if (pendingNavTarget.label === "Menu") {
+        handleOpenBrand(BRANDS[0]);
+      }
+      setPendingNavTarget(null);
+    } else if (window.location.hash && !window.location.hash.includes("admin") && !window.location.hash.includes("portal")) {
+      setTimeout(() => {
+        const targetId = window.location.hash.replace("#", "");
+        const elem = document.getElementById(targetId);
+        if (elem) {
+          elem.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      }, 40);
+    }
+  };
 
   const handleOpenBrand = (brand: BrandData) => {
     setSelectedBrand(brand);
@@ -2014,17 +2079,14 @@ export default function App() {
     }
   };
 
-  if (appLoading) {
-    return <InitialLoader />;
-  }
-
   if (isAdminRoute) {
     return <AdminPortal />;
   }
 
   return (
     <div className="relative min-h-screen bg-cream-50 text-maroon-950 antialiased selection:bg-amber-400 selection:text-maroon-950">
-      <Nav />
+      {appLoading && <InitialLoader onComplete={handleLoaderComplete} />}
+      <Nav onOpenBrand={handleOpenBrand} onTriggerNavLoader={handleTriggerNavLoader} />
       <main>
         <Hero onOpenBrand={handleOpenBrand} />
         <SocialProof />

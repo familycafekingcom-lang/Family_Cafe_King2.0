@@ -41,7 +41,7 @@ export function UpcomingLaunches({ onOpenCityBooking }: UpcomingLaunchesProps = 
   }, [launches]);
 
   return (
-    <section id="upcoming" className="relative overflow-hidden bg-gradient-to-b from-cream-50 via-[#fff6e6] to-cream-50 py-20 sm:py-28">
+    <section id="upcoming" className="relative overflow-hidden bg-gradient-to-b from-cream-50 via-[#fff6e6] to-cream-50 py-10 sm:py-14 scroll-mt-24">
       <div className="pointer-events-none absolute -left-28 top-24 h-80 w-80 rounded-full bg-amber-500/20 blur-3xl animate-blob" />
       <div className="pointer-events-none absolute -right-24 bottom-20 h-96 w-96 rounded-full bg-rose-500/15 blur-3xl animate-blob" style={{ animationDelay: "4s" }} />
 
