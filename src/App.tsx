@@ -541,9 +541,6 @@ function HeroVisual({
               <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-[11.5px] font-bold uppercase tracking-[0.16em] text-amber-200 backdrop-blur">
                 <Sparkles size={11} /> {displayedSlide.badge_text || "Family Cafe King Group"}
               </span>
-              <span className="rounded-full bg-emerald-500/20 px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-wider text-emerald-300">
-                Live Slider
-              </span>
             </div>
 
             <div className="mt-7 flex items-end justify-between gap-4">
