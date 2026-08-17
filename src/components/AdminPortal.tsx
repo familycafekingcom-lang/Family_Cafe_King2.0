@@ -423,26 +423,42 @@ export function AdminPortal() {
     event.preventDefault();
     if (!session) return;
     try {
-      const saved = await saveSlide(slideForm, session.accessToken);
+      const payload = {
+        title: slideForm.title.trim(),
+        subtitle: slideForm.subtitle.trim() || "High margin franchise with complete SOPs, equipment, and launch marketing support.",
+        brand_name: slideForm.brand_name || "Family Cafe King",
+        badge_text: slideForm.badge_text.trim() || "350+ Franchises All Over India",
+        image_url: slideForm.image_url.trim() || DEFAULT_SLIDES[0].image_url,
+        price_display: slideForm.price_display.trim() || "₹3 - 10 Lakhs",
+        space_req: slideForm.space_req.trim() || "100 - 300 sq.ft",
+        cta_text: slideForm.cta_text.trim() || "Apply for Franchise",
+        cta_link: slideForm.cta_link.trim() || "#lead",
+        accent_color: slideForm.accent_color || "#8C1F28",
+        is_active: true,
+        order: slides.length,
+      };
+
+      const saved = await saveSlide(payload, session.accessToken);
       setSlides((current) => [...current, saved]);
       setSlideForm({
         title: "",
         subtitle: "",
         brand_name: "Family Cafe King",
-        badge_text: "350+ Franchises All Over India",
-        image_url: DEFAULT_SLIDES[0].image_url,
-        price_display: "₹5 - 15 Lakhs",
-        space_req: "150 - 500 sq.ft",
-        cta_text: "Apply for Franchise",
-        cta_link: "#lead",
+        badge_text: "",
+        image_url: "",
+        price_display: "",
+        space_req: "",
+        cta_text: "",
+        cta_link: "",
         accent_color: "#8C1F28",
         is_active: true,
-        order: slides.length,
+        order: slides.length + 1,
       });
     } catch (err) {
       alert(err instanceof Error ? err.message : "Failed to create hero slide");
     }
   };
+
 
   const saveEditSlide = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -1289,33 +1305,110 @@ export function AdminPortal() {
 
             {/* Add Slide Form */}
             <form onSubmit={addSlide} className="mt-6 space-y-4 rounded-3xl border p-5 bg-amber-500/5 border-amber-500/20">
-              <h3 className={`font-display text-sm font-extrabold uppercase tracking-wider text-amber-500`}>Add New Hero Slide</h3>
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                <AdminMiniInput placeholder="Hero Title Headline" value={slideForm.title} onChange={(val) => setSlideForm((f) => ({ ...f, title: val }))} required isNight={isNight} />
-                <AdminMiniInput placeholder="Brand Name (e.g. Family Cafe King)" value={slideForm.brand_name} onChange={(val) => setSlideForm((f) => ({ ...f, brand_name: val }))} required isNight={isNight} />
-                <AdminMiniInput placeholder="Tag Badge (e.g. 350+ Franchises)" value={slideForm.badge_text} onChange={(val) => setSlideForm((f) => ({ ...f, badge_text: val }))} isNight={isNight} />
-                <AdminMiniInput placeholder="Investment (e.g. ₹5 - 15 Lakhs)" value={slideForm.price_display} onChange={(val) => setSlideForm((f) => ({ ...f, price_display: val }))} isNight={isNight} />
-                <AdminMiniInput placeholder="Space Req (e.g. 150 - 500 sq.ft)" value={slideForm.space_req} onChange={(val) => setSlideForm((f) => ({ ...f, space_req: val }))} isNight={isNight} />
-                <AdminMiniInput placeholder="CTA Text (e.g. Apply for Franchise)" value={slideForm.cta_text} onChange={(val) => setSlideForm((f) => ({ ...f, cta_text: val }))} isNight={isNight} />
-                <AdminMiniInput placeholder="CTA Link (e.g. #lead)" value={slideForm.cta_link} onChange={(val) => setSlideForm((f) => ({ ...f, cta_link: val }))} isNight={isNight} />
-                <AdminMiniInput placeholder="Image URL" value={slideForm.image_url} onChange={(val) => setSlideForm((f) => ({ ...f, image_url: val }))} isNight={isNight} />
+              <div className="flex items-center justify-between">
+                <h3 className={`font-display text-sm font-extrabold uppercase tracking-wider text-amber-500`}>Add New Hero Slide</h3>
+                <span className="text-[11px] font-bold text-amber-600 bg-amber-500/10 px-2.5 py-1 rounded-full border border-amber-500/20">
+                  ✨ Simple Mode: Just paste Image URL & Title!
+                </span>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-1">
+                  <label className="text-[11px] font-extrabold uppercase tracking-wider text-amber-500">
+                    Hero Slide Image URL *
+                  </label>
+                  <AdminMiniInput
+                    placeholder="https://example.com/image.png or /images/your-banner.jpg"
+                    value={slideForm.image_url}
+                    onChange={(val) => setSlideForm((f) => ({ ...f, image_url: val }))}
+                    required
+                    isNight={isNight}
+                  />
+                  <p className="text-[10.5px] font-semibold text-slate-400">Paste any image link (WebP, PNG, JPG, or Unsplash/CDN link).</p>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[11px] font-extrabold uppercase tracking-wider text-amber-500">
+                    Hero Title Headline *
+                  </label>
+                  <AdminMiniInput
+                    placeholder="e.g. Own India's Premier Multi-Brand Cafe"
+                    value={slideForm.title}
+                    onChange={(val) => setSlideForm((f) => ({ ...f, title: val }))}
+                    required
+                    isNight={isNight}
+                  />
+                </div>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-3">
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-slate-400">Brand Name</label>
+                  <select
+                    value={slideForm.brand_name}
+                    onChange={(e) => setSlideForm((f) => ({ ...f, brand_name: e.target.value }))}
+                    className={`w-full rounded-2xl border px-3 py-2 text-xs font-bold ${
+                      isNight ? "border-slate-800 bg-slate-900 text-white" : "border-amber-200 bg-white text-slate-900"
+                    }`}
+                  >
+                    <option value="Family Cafe King">Family Cafe King</option>
+                    <option value="Chai Cafe King">Chai Cafe King</option>
+                    <option value="Paan King">Paan King</option>
+                    <option value="Shake & Soda King">Shake & Soda King</option>
+                    <option value="Lassi King">Lassi King</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-slate-400">Badge Tag (Optional)</label>
+                  <AdminMiniInput
+                    placeholder="e.g. 350+ Outlets All Over India"
+                    value={slideForm.badge_text}
+                    onChange={(val) => setSlideForm((f) => ({ ...f, badge_text: val }))}
+                    isNight={isNight}
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-slate-400">Investment Price Tag (Optional)</label>
+                  <AdminMiniInput
+                    placeholder="e.g. ₹3 - 10 Lakhs"
+                    value={slideForm.price_display}
+                    onChange={(val) => setSlideForm((f) => ({ ...f, price_display: val }))}
+                    isNight={isNight}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[11px] font-bold text-slate-400">Subtitle / Description (Optional)</label>
+                <AdminMiniInput
+                  placeholder="e.g. High margin franchise with complete SOPs, equipment, and launch marketing support."
+                  value={slideForm.subtitle}
+                  onChange={(val) => setSlideForm((f) => ({ ...f, subtitle: val }))}
+                  isNight={isNight}
+                />
+              </div>
+
+              <div className="flex items-center justify-between pt-2">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold">Accent:</span>
+                  <span className="text-xs font-bold text-slate-400">Accent Color:</span>
                   <input
                     type="color"
                     value={slideForm.accent_color}
                     onChange={(e) => setSlideForm((f) => ({ ...f, accent_color: e.target.value }))}
-                    className="h-10 w-full rounded-2xl border p-1 cursor-pointer"
+                    className="h-8 w-14 rounded-xl border p-0.5 cursor-pointer"
                   />
                 </div>
-              </div>
-              <AdminMiniInput placeholder="Subtitle / Short Description" value={slideForm.subtitle} onChange={(val) => setSlideForm((f) => ({ ...f, subtitle: val }))} isNight={isNight} />
-              <div className="flex justify-end">
-                <button className="inline-flex items-center gap-2 rounded-2xl bg-amber-500 px-6 py-3 text-xs font-black text-black hover:bg-amber-400 shadow-md">
-                  <Plus size={15} /> Add Hero Slide
+                <button
+                  type="submit"
+                  className="inline-flex items-center gap-2 rounded-2xl bg-amber-500 px-6 py-3 text-xs font-black text-black hover:bg-amber-400 shadow-md shadow-amber-500/20 transition cursor-pointer"
+                >
+                  <Plus size={15} /> Add Hero Slide Now
                 </button>
               </div>
             </form>
+
 
             {/* Slides Cards List */}
             <div className="mt-6 space-y-4">
