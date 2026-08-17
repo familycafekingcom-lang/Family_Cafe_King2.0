@@ -1343,21 +1343,15 @@ export function AdminPortal() {
 
               <div className="grid gap-3 sm:grid-cols-3">
                 <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-slate-400">Brand Name</label>
-                  <select
+                  <label className="text-[11px] font-bold text-slate-400">Brand Name / Headline Brand</label>
+                  <AdminMiniInput
+                    placeholder="e.g. Family Cafe King or Chai Cafe King"
                     value={slideForm.brand_name}
-                    onChange={(e) => setSlideForm((f) => ({ ...f, brand_name: e.target.value }))}
-                    className={`w-full rounded-2xl border px-3 py-2 text-xs font-bold ${
-                      isNight ? "border-slate-800 bg-slate-900 text-white" : "border-amber-200 bg-white text-slate-900"
-                    }`}
-                  >
-                    <option value="Family Cafe King">Family Cafe King</option>
-                    <option value="Chai Cafe King">Chai Cafe King</option>
-                    <option value="Paan King">Paan King</option>
-                    <option value="Shake & Soda King">Shake & Soda King</option>
-                    <option value="Lassi King">Lassi King</option>
-                  </select>
+                    onChange={(val) => setSlideForm((f) => ({ ...f, brand_name: val }))}
+                    isNight={isNight}
+                  />
                 </div>
+
 
                 <div className="space-y-1">
                   <label className="text-[11px] font-bold text-slate-400">Badge Tag (Optional)</label>
