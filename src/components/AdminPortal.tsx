@@ -1315,17 +1315,18 @@ export function AdminPortal() {
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-1">
                   <label className="text-[11px] font-extrabold uppercase tracking-wider text-amber-500">
-                    Hero Slide Image URL *
+                    Hero Slide Image Link / Path *
                   </label>
                   <AdminMiniInput
-                    placeholder="https://example.com/image.png or /images/your-banner.jpg"
+                    placeholder="https://... or /images/family-cafe-king-food.png"
                     value={slideForm.image_url}
                     onChange={(val) => setSlideForm((f) => ({ ...f, image_url: val }))}
                     required
                     isNight={isNight}
                   />
-                  <p className="text-[10.5px] font-semibold text-slate-400">Paste any image link (WebP, PNG, JPG, or Unsplash/CDN link).</p>
+                  <p className="text-[10.5px] font-semibold text-slate-400">Online Image Link या local image path (`/images/food.png`) पेस्ट करें।</p>
                 </div>
+
 
                 <div className="space-y-1">
                   <label className="text-[11px] font-extrabold uppercase tracking-wider text-amber-500">
