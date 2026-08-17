@@ -539,66 +539,57 @@ export interface Testimonial {
 
 export const TESTIMONIALS: Testimonial[] = [
   {
-    name: "Rohan Malhotra",
-    city: "Ludhiana, Punjab",
-    brand: "Chai Cafe King",
-    quote:
-      "The onboarding team held our hand through every step — from lease negotiation to launch day. We experienced strong sales right from month one. The recipes are loved by our regulars.",
-    rating: 5,
-    avatar: "RM",
-    gradient: "from-amber-500 to-rose-600",
-  },
-  {
-    name: "Priya Iyer",
-    city: "Coimbatore, Tamil Nadu",
-    brand: "Lassi King",
-    quote:
-      "I was a homemaker looking to start something of my own. Family Cafe King made it possible — low investment, complete training, and my kiosk did ₹1.4L in the first month itself.",
-    rating: 5,
-    avatar: "PI",
-    gradient: "from-yellow-500 to-orange-600",
-  },
-  {
-    name: "Aditya Verma",
-    city: "Lucknow, Uttar Pradesh",
+    name: "Mr. Saksham Srivastava",
+    city: "Sultanpur, UP",
     brand: "Paan King",
     quote:
-      "The brand recall is fantastic. Our high-street kiosk sees a queue every evening. Centralised supply keeps our quality consistent and margins healthy.",
+      "The brand recall is fantastic. Our high-street kiosk sees a heavy queue every evening. Centralised supply keeps our quality consistent and margins healthy.",
     rating: 5,
-    avatar: "AV",
+    avatar: "SS",
     gradient: "from-emerald-500 to-teal-700",
   },
   {
-    name: "Meera Shah",
-    city: "Ahmedabad, Gujarat",
-    brand: "Shake & Soda King",
+    name: "Mr. Anil Kumar",
+    city: "Sitamarhi, Bihar",
+    brand: "Paan • Soda • Lassi",
     quote:
-      "Summer sales are unreal! The marketing team runs Instagram reels for us every week and gives us festive posters. Feels like having a full agency supporting us.",
+      "Combining Paan, Soda, and Lassi under one roof was the best decision. Multi-brand cross-selling gives us high daily footfall and maximum profitability.",
     rating: 5,
-    avatar: "MS",
-    gradient: "from-sky-500 to-fuchsia-700",
+    avatar: "AK",
+    gradient: "from-amber-500 to-orange-600",
   },
   {
-    name: "Karthik Nair",
-    city: "Kochi, Kerala",
+    name: "Ms. Namrata Jaiswal",
+    city: "Barabanki, UP",
     brand: "Chai Cafe King",
     quote:
-      "I compared 5 different franchises before choosing FCK. The transparency on numbers, the support ecosystem and the food quality are simply unmatched in this segment.",
+      "The onboarding team held our hand through every step — from lease negotiation to launch day. The recipes and kulhad chai are loved by all our regulars.",
     rating: 5,
-    avatar: "KN",
-    gradient: "from-orange-500 to-red-700",
+    avatar: "NJ",
+    gradient: "from-rose-600 to-maroon-800",
   },
   {
-    name: "Sneha Kulkarni",
-    city: "Pune, Maharashtra",
-    brand: "Multi-Brand Outlet",
+    name: "Mr. Mohammed Baba",
+    city: "Yadgir, Karnataka",
+    brand: "Paan King",
     quote:
-      "We took Chai + Shake under one roof. Cross-selling is incredible — morning is chai, evenings are shakes. Two revenue streams, one rent, one team. Genius model.",
+      "Family Cafe King provided end-to-end setup, operational SOPs, and marketing support. Our Paan King outlet has become the most popular spot in town.",
     rating: 5,
-    avatar: "SK",
-    gradient: "from-fuchsia-500 to-indigo-700",
+    avatar: "MB",
+    gradient: "from-sky-500 to-indigo-700",
+  },
+  {
+    name: "Mr. Sanjay Parashar",
+    city: "Indore, MP",
+    brand: "Chai Cafe King • Paan King",
+    quote:
+      "Running Chai Cafe King and Paan King together gives us non-stop morning-to-night customer flow. Two revenue streams with shared overheads is a genius model.",
+    rating: 5,
+    avatar: "SP",
+    gradient: "from-fuchsia-600 to-purple-800",
   },
 ];
+
 
 export interface Plan {
   name: string;
