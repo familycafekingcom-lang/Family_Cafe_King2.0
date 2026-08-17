@@ -566,7 +566,7 @@ function HeroVisual({
                       <img
                         src={img}
                         alt={displayedSlide.brand_name}
-                        className="h-full w-full rounded-xl object-cover transition-transform duration-700 ease-out group-hover:scale-110 shadow-inner"
+                        className="h-full w-full rounded-xl object-contain bg-black/40 p-1 transition-transform duration-700 ease-out group-hover:scale-105 shadow-inner"
                         onError={(e) => { (e.target as HTMLElement).style.display = "none"; }}
                       />
                     ) : (
@@ -578,6 +578,7 @@ function HeroVisual({
                       </div>
                     );
                   })()}
+
                   {/* Mini accent logo badge */}
                   <div className={`absolute bottom-1 right-1 flex h-6 w-6 items-center justify-center rounded-lg bg-gradient-to-br ${displayedBrand.accentGradient} text-white shadow-lg ring-2 ring-black/40`}>
                     {(() => { const BrandIcon = displayedBrand.icon; return <BrandIcon size={13} strokeWidth={2.5} />; })()}
