@@ -1235,20 +1235,23 @@ function Testimonials() {
                   <span className="font-display text-3xl leading-none text-amber-500">"</span>
                   {t.quote}
                 </blockquote>
-                <div className="mt-6 flex items-center gap-3 border-t border-maroon-900/10 pt-5">
-                  <div
-                    className={`grid h-11 w-11 place-items-center rounded-full bg-gradient-to-br ${t.gradient} text-[13.5px] font-bold text-white shadow`}
-                  >
-                    {t.avatar}
+                <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-maroon-900/10 pt-4">
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <div
+                      className={`grid h-11 w-11 flex-shrink-0 place-items-center rounded-full bg-gradient-to-br ${t.gradient} text-[13.5px] font-bold text-white shadow`}
+                    >
+                      {t.avatar}
+                    </div>
+                    <div className="min-w-0 leading-snug">
+                      <div className="text-[14px] font-extrabold text-maroon-950 truncate">{t.name}</div>
+                      <div className="text-[12px] font-semibold text-maroon-800">{t.city}</div>
+                    </div>
                   </div>
-                  <div className="flex-1 leading-tight">
-                    <div className="text-[14.5px] font-bold text-maroon-950">{t.name}</div>
-                    <div className="text-[12.5px] font-medium text-maroon-800">{t.city}</div>
-                  </div>
-                  <span className="rounded-full bg-maroon-900/10 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-maroon-950">
+                  <span className="rounded-full bg-maroon-900/10 px-3 py-1 text-[10.5px] font-extrabold uppercase tracking-wider text-maroon-950 whitespace-normal text-center max-w-full">
                     {t.brand}
                   </span>
                 </div>
+
               </article>
             </Reveal>
           ))}
