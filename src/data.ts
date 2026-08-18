@@ -16,8 +16,8 @@ import {
   Store,
 } from "lucide-react";
 
-export const CONTACT_PHONE = "+91 9341127991";
-export const CONTACT_PHONE_2 = "+91 9311619612";
+export const CONTACT_PHONE = "+91 9170763612";
+export const WHATSAPP_NUMBER = "919170763612";
 export const CONTACT_EMAIL = "familycafeking.com@gmail.com";
 export const WHATSAPP_NUMBER = "919341127991";
 export const LOCATION = "SA 7/140 PS, Benipur Shivpur, Sarnath, Varanasi, 221007";
@@ -26,7 +26,7 @@ export const SOCIAL_LINKS = {
   instagram: "https://www.instagram.com/familycafeking",
   facebook: "https://www.facebook.com/profile.php?id=61591703498565",
   linkedin: "https://www.linkedin.com/company/133456642/",
-  whatsapp: "https://wa.me/+919341127991",
+  whatsapp: "https://wa.me/+919170763612",
 };
 
 export const waLink = (brand: string) =>
